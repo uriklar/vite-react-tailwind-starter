@@ -1,0 +1,259 @@
+{
+    "games": [
+        {
+            "gameId": "E1v8",
+            "round": 1,
+            "conference": "East",
+            "matchup": 1,
+            "nextGameId": "ESF1",
+            "team1": {
+                "name": "Boston Celtics",
+                "seed": 1,
+                "logo": "https://i.shgcdn.com/81da592d-d5cc-41a9-af3a-c40b64b8f73a/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Chicago Bulls",
+                "seed": 8,
+                "logo": "https://i.shgcdn.com/46f92a06-e91d-4c46-baff-9fbc5ba497de/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "E4v5",
+            "round": 1,
+            "conference": "East",
+            "matchup": 2,
+            "nextGameId": "ESF1",
+            "team1": {
+                "name": "Cleveland Cavaliers",
+                "seed": 4,
+                "logo": "https://i.shgcdn.com/eace5363-aa26-480c-b534-a80ae4ad26f4/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Orlando Magic",
+                "seed": 5,
+                "logo": "https://i.shgcdn.com/966192db-bf7f-4203-a2a5-9208c25e810c/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "E3v6",
+            "round": 1,
+            "conference": "East",
+            "matchup": 3,
+            "nextGameId": "ESF2",
+            "team1": {
+                "name": "Philadelphia 76ers",
+                "seed": 3,
+                "logo": "https://i.shgcdn.com/2d64c5cf-322d-452c-ab44-14b7d6996d5f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Indiana Pacers",
+                "seed": 6,
+                "logo": "https://i.shgcdn.com/a2efe091-2c05-436e-92ce-783ca2bd4eac/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "E2v7",
+            "round": 1,
+            "conference": "East",
+            "matchup": 4,
+            "nextGameId": "ESF2",
+            "team1": {
+                "name": "New York Knicks",
+                "seed": 2,
+                "logo": "https://i.shgcdn.com/7ba96efe-0f70-4fc3-8938-ed8f38c4083e/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Miami Heat",
+                "seed": 7,
+                "logo": "https://i.shgcdn.com/3a0d023e-ca8a-4e4d-8bcf-1e6835479cb5/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "W1v8",
+            "round": 1,
+            "conference": "West",
+            "matchup": 1,
+            "nextGameId": "WSF1",
+            "team1": {
+                "name": "Denver Nuggets",
+                "seed": 1,
+                "logo": "https://i.shgcdn.com/9c0f4588-c45c-4422-a1ef-f0abf7493026/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Minnesota Timberwolves",
+                "seed": 8,
+                "logo": "https://i.shgcdn.com/6e6d8489-4386-4931-a3ad-0599da11c652/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "W4v5",
+            "round": 1,
+            "conference": "West",
+            "matchup": 2,
+            "nextGameId": "WSF1",
+            "team1": {
+                "name": "Phoenix Suns",
+                "seed": 4,
+                "logo": "https://i.shgcdn.com/5707aaea-df26-45d6-b221-d06df8ba9d47/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Los Angeles Clippers",
+                "seed": 5,
+                "logo": "https://i.shgcdn.com/72a132d6-f158-4983-bfdc-def8ab235672/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "W3v6",
+            "round": 1,
+            "conference": "West",
+            "matchup": 3,
+            "nextGameId": "WSF2",
+            "team1": {
+                "name": "Sacramento Kings",
+                "seed": 3,
+                "logo": "https://i.shgcdn.com/6b8dc1e2-49ea-4f0d-83f0-ffbc849cdb9f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Golden State Warriors",
+                "seed": 6,
+                "logo": "https://i.shgcdn.com/644a885d-e901-4b01-8b62-e24b4178d3b9/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "W2v7",
+            "round": 1,
+            "conference": "West",
+            "matchup": 4,
+            "nextGameId": "WSF2",
+            "team1": {
+                "name": "Memphis Grizzlies",
+                "seed": 2,
+                "logo": "https://i.shgcdn.com/098b6944-6bea-4eb0-a942-7baa065f2b3b/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            },
+            "team2": {
+                "name": "Los Angeles Lakers",
+                "seed": 7,
+                "logo": "https://i.shgcdn.com/0fcfdc90-889c-430a-956d-71d7e5046776/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+            }
+        },
+        {
+            "gameId": "ESF1",
+            "round": 2,
+            "conference": "East",
+            "matchup": 5,
+            "nextGameId": "ECF",
+            "team1": {
+                "name": "Winner E1v8",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner E4v5",
+                "seed": null,
+                "logo": ""
+            }
+        },
+        {
+            "gameId": "ESF2",
+            "round": 2,
+            "conference": "East",
+            "matchup": 6,
+            "nextGameId": "ECF",
+            "team1": {
+                "name": "Winner E3v6",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner E2v7",
+                "seed": null,
+                "logo": ""
+            }
+        },
+        {
+            "gameId": "WSF1",
+            "round": 2,
+            "conference": "West",
+            "matchup": 5,
+            "nextGameId": "WCF",
+            "team1": {
+                "name": "Winner W1v8",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner W4v5",
+                "seed": null,
+                "logo": ""
+            }
+        },
+        {
+            "gameId": "WSF2",
+            "round": 2,
+            "conference": "West",
+            "matchup": 6,
+            "nextGameId": "WCF",
+            "team1": {
+                "name": "Winner W3v6",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner W2v7",
+                "seed": null,
+                "logo": ""
+            }
+        },
+        {
+            "gameId": "ECF",
+            "round": 3,
+            "conference": "East",
+            "matchup": 7,
+            "nextGameId": "Finals",
+            "team1": {
+                "name": "Winner ESF1",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner ESF2",
+                "seed": null,
+                "logo": ""
+            }
+        },
+        {
+            "gameId": "WCF",
+            "round": 3,
+            "conference": "West",
+            "matchup": 7,
+            "nextGameId": "Finals",
+            "team1": {
+                "name": "Winner WSF1",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner WSF2",
+                "seed": null,
+                "logo": ""
+            }
+        },
+        {
+            "gameId": "Finals",
+            "round": 4,
+            "conference": "Finals",
+            "matchup": 8,
+            "nextGameId": null,
+            "team1": {
+                "name": "Winner ECF",
+                "seed": null,
+                "logo": ""
+            },
+            "team2": {
+                "name": "Winner WCF",
+                "seed": null,
+                "logo": ""
+            }
+        }
+    ]
+}
