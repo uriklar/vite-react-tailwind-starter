@@ -20,52 +20,80 @@ const BracketSubmissionPage: React.FC = () => {
   } = useBracketSubmission();
 
   return (
-    <div className="min-h-screen bg-[#f4edfd]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-bold text-[#0c0c0d] mb-2 font-montserrat text-center">
-            March Madness Bracket
+    <div className="min-h-screen bg-background">
+      {/* Header Section */}
+      <header className="bg-white border-b border-secondary/30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-primary text-center font-montserrat">
+            March Madness <span className="text-accent">Bracket Challenge</span>
           </h1>
-          <p className="text-lg text-[#0c0c0d]/80 mb-8 text-center font-inter">
-            Fill out your predictions for the tournament
+          <p className="mt-3 text-lg text-primary/70 text-center font-inter max-w-2xl mx-auto">
+            Fill out your predictions for the tournament and compete with others
+            to see who can make the most accurate picks.
           </p>
+        </div>
+      </header>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-[#d5c8f9]">
-              <label
-                htmlFor="userName"
-                className="block text-sm font-medium text-[#0c0c0d] mb-2 font-inter"
-              >
-                Your Name
-              </label>
-              <input
-                type="text"
-                id="userName"
-                value={userName}
-                onChange={handleNameChange}
-                placeholder="Enter your name to submit"
-                required
-                disabled={isSubmitting || submitStatus === "success"}
-                className="w-full px-4 py-2 border border-[#d5c8f9] rounded-lg focus:ring-2 focus:ring-[#6837f8] focus:border-transparent transition duration-200 disabled:bg-[#f4edfd] disabled:cursor-not-allowed font-inter"
-              />
-            </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* User Information Card */}
+            <section className="bg-white rounded-xl shadow-custom p-6 border border-secondary/30">
+              <h2 className="text-xl font-semibold text-primary mb-4 font-montserrat">
+                Your Information
+              </h2>
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="text-sm font-medium text-primary/80 font-inter mb-1.5 block">
+                    Full Name
+                  </span>
+                  <input
+                    type="text"
+                    value={userName}
+                    onChange={handleNameChange}
+                    placeholder="Enter your name to submit"
+                    required
+                    disabled={isSubmitting || submitStatus === "success"}
+                    className="w-full px-4 py-2.5 rounded-lg border border-secondary/50 
+                             focus:ring-2 focus:ring-accent/30 focus:border-accent
+                             disabled:bg-background/50 disabled:cursor-not-allowed
+                             placeholder:text-primary/40 font-inter text-primary
+                             transition duration-200"
+                  />
+                </label>
+              </div>
+            </section>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-[#d5c8f9]">
-              <BracketDisplay
-                games={displayedGames}
-                guesses={guesses}
-                onGuessChange={handleGuessChange}
-                readOnly={isSubmitting || submitStatus === "success"}
-                layoutMode="conferences"
-              />
-            </div>
+            {/* Bracket Section */}
+            <section className="bg-white rounded-xl shadow-custom p-6 border border-secondary/30">
+              <h2 className="text-xl font-semibold text-primary mb-4 font-montserrat">
+                Tournament Bracket
+              </h2>
+              <div className="overflow-x-auto">
+                <BracketDisplay
+                  games={displayedGames}
+                  guesses={guesses}
+                  onGuessChange={handleGuessChange}
+                  readOnly={isSubmitting || submitStatus === "success"}
+                  layoutMode="conferences"
+                />
+              </div>
+            </section>
 
-            <div className="flex flex-col items-center space-y-4">
+            {/* Action Section */}
+            <section className="flex flex-col items-center space-y-4 pt-4">
               {(submitStatus === "idle" || submitStatus === "error") && (
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#6837f8] hover:bg-[#6837f8]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6837f8] disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 font-inter shadow-md"
+                  className="inline-flex items-center justify-center px-8 py-3 
+                           text-base font-medium rounded-lg text-white 
+                           bg-accent hover:bg-accent/90 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 
+                           focus:ring-accent disabled:opacity-50 
+                           disabled:cursor-not-allowed transition duration-200 
+                           font-inter shadow-custom min-w-[200px]"
                 >
                   {isSubmitting ? (
                     <>
@@ -82,12 +110,12 @@ const BracketSubmissionPage: React.FC = () => {
                           r="10"
                           stroke="currentColor"
                           strokeWidth="4"
-                        ></circle>
+                        />
                         <path
                           className="opacity-75"
                           fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
+                        />
                       </svg>
                       Submitting...
                     </>
@@ -99,61 +127,82 @@ const BracketSubmissionPage: React.FC = () => {
                 </button>
               )}
 
+              {/* Success Message */}
               {submitStatus === "success" && (
-                <div className="w-full bg-[#fce07f]/20 border border-[#fce07f] rounded-lg p-6 text-[#0c0c0d]">
-                  <div className="flex items-center mb-4">
-                    <svg
-                      className="h-6 w-6 text-[#6837f8] mr-2"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <h3 className="text-lg font-semibold font-montserrat">
-                      Submission Successful!
-                    </h3>
+                <div className="w-full bg-highlight/10 border border-highlight rounded-lg p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-6 w-6 text-accent"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-primary font-montserrat">
+                        Bracket Submitted Successfully!
+                      </h3>
+                      <p className="mt-2 text-primary/80 font-inter">
+                        Your predictions have been recorded. Good luck in the
+                        tournament!
+                      </p>
+                      <p className="mt-4 text-sm text-primary/60 font-mono bg-white/50 p-2 rounded">
+                        Submission ID: {binId}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[#0c0c0d]/80 mb-2 font-inter">
-                    Your bracket has been submitted successfully.
-                  </p>
-                  <p className="text-sm text-[#0c0c0d]/60 font-inter">
-                    Submission ID: {binId}
-                  </p>
                 </div>
               )}
 
+              {/* Error Message */}
               {submitStatus === "error" && (
-                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-6 text-red-800">
-                  <div className="flex items-center mb-4">
-                    <svg
-                      className="h-6 w-6 text-red-600 mr-2"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                    <h3 className="text-lg font-semibold font-montserrat">
-                      Submission Failed
-                    </h3>
+                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-6 w-6 text-red-600"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-red-800 font-montserrat">
+                        Submission Failed
+                      </h3>
+                      <p className="mt-2 text-red-700 font-inter">
+                        We couldn't submit your bracket. Please check your
+                        connection and try again.
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-red-700 mb-2 font-inter">
-                    We couldn't submit your bracket. Please check your
-                    connection and try again.
-                  </p>
                 </div>
               )}
-            </div>
+            </section>
           </form>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="mt-16 bg-white border-t border-secondary/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-center text-sm text-primary/60 font-inter">
+            © {new Date().getFullYear()} March Madness Bracket Challenge. All
+            rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

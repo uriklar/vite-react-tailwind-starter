@@ -58,95 +58,127 @@ const GameCard: React.FC<{
   const canSelectTeam2 = isTeamSelectable(game.team2);
   const canSelectGame = canSelectTeam1 && canSelectTeam2 && !readOnly;
 
+  const TeamDisplay = ({
+    team,
+    isSelected,
+  }: {
+    team: Team;
+    isSelected: boolean;
+  }) => (
+    <div
+      className={`
+      flex items-center p-2 rounded-lg transition-all duration-200
+      ${
+        isSelected
+          ? "bg-accent/5 border border-accent"
+          : "hover:bg-background/50 border border-transparent"
+      }
+      ${canSelectGame ? "cursor-pointer" : "cursor-not-allowed opacity-60"}
+    `}
+    >
+      <div className="flex-shrink-0 w-12 h-12 mr-3">
+        {team.logo ? (
+          <img
+            src={team.logo}
+            alt={`${team.name} logo`}
+            className="w-full h-full object-contain rounded-full p-0.5"
+          />
+        ) : (
+          <div className="w-full h-full rounded-full bg-secondary/20 flex items-center justify-center">
+            <span className="text-xs text-primary/40">No logo</span>
+          </div>
+        )}
+      </div>
+      <div className="flex-grow">
+        <div className="flex items-center">
+          <span
+            className={`
+            text-sm font-medium
+            ${isSelected ? "text-accent" : "text-primary"}
+          `}
+          >
+            {team.name}
+          </span>
+        </div>
+        <div className="flex items-center mt-0.5">
+          <span className="text-xs text-primary/60">
+            Seed: {team.seed ?? "-"}
+          </span>
+        </div>
+      </div>
+      <div className="flex-shrink-0 ml-2">
+        <input
+          type="radio"
+          name={`winner-${game.gameId}`}
+          value={team.name}
+          checked={isSelected}
+          onChange={() => canSelectGame && onWinnerChange(team)}
+          disabled={!canSelectGame}
+          className="h-4 w-4 text-accent border-secondary/30 focus:ring-accent/30 transition-all duration-200"
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div
       key={game.gameId}
-      className={`border rounded p-3 shadow-sm w-64 mb-4 ${
-        // Fixed width, margin bottom
-        guess.winner ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"
-      }`}
+      className={`
+        border rounded-xl p-4 shadow-sm w-72 mb-4 transition-all duration-200
+        ${
+          guess.winner
+            ? "border-accent/30 bg-white"
+            : "border-secondary/30 bg-white"
+        }
+        hover:shadow-md
+      `}
     >
-      <p className="text-xs text-gray-500 mb-2">
-        {game.conference} - Matchup {game.matchup}
-      </p>
-      <div className="space-y-2">
-        {/* Team 1 Selection */}
-        <label
-          className={`flex items-center space-x-2 text-sm ${
-            canSelectGame ? "cursor-pointer" : "cursor-not-allowed opacity-60"
-          } ${guess.winner?.name === game.team1.name ? "font-bold" : ""}`}
-        >
-          <input
-            type="radio"
-            name={`winner-${game.gameId}`}
-            value={game.team1.name}
-            checked={guess.winner?.name === game.team1.name}
-            onChange={() => canSelectGame && onWinnerChange(game.team1)}
-            disabled={!canSelectGame}
-            className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out disabled:opacity-50"
-          />
-          <span>
-            ({game.team1.seed ?? "-"}) {game.team1.name}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-medium text-primary/60 bg-secondary/10 px-2 py-1 rounded-full">
+          {game.conference} - Match {game.matchup}
+        </span>
+        {guess.winner && (
+          <span className="text-xs font-medium text-accent bg-accent/5 px-2 py-1 rounded-full">
+            Winner Selected
           </span>
-          {game.team1.logo && (
-            <img
-              src={game.team1.logo}
-              alt={`${game.team1.name} logo`}
-              className="w-5 h-5 object-contain ml-auto"
-            />
-          )}
-        </label>
-        {/* Team 2 Selection */}
-        <label
-          className={`flex items-center space-x-2 text-sm ${
-            canSelectGame ? "cursor-pointer" : "cursor-not-allowed opacity-60"
-          } ${guess.winner?.name === game.team2.name ? "font-bold" : ""}`}
-        >
-          <input
-            type="radio"
-            name={`winner-${game.gameId}`}
-            value={game.team2.name}
-            checked={guess.winner?.name === game.team2.name}
-            onChange={() => canSelectGame && onWinnerChange(game.team2)}
-            disabled={!canSelectGame}
-            className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out disabled:opacity-50"
-          />
-          <span>
-            ({game.team2.seed ?? "-"}) {game.team2.name}
-          </span>
-          {game.team2.logo && (
-            <img
-              src={game.team2.logo}
-              alt={`${game.team2.name} logo`}
-              className="w-5 h-5 object-contain ml-auto"
-            />
-          )}
-        </label>
+        )}
       </div>
+
+      <div className="space-y-3">
+        <TeamDisplay
+          team={game.team1}
+          isSelected={guess.winner?.name === game.team1.name}
+        />
+        <TeamDisplay
+          team={game.team2}
+          isSelected={guess.winner?.name === game.team2.name}
+        />
+      </div>
+
       {/* Games Selection Dropdown */}
-      {canSelectGame && (
-        <div className="mt-3">
+      {canSelectGame && guess.winner && (
+        <div className="mt-4 p-3 bg-background/30 rounded-lg">
           <label
             htmlFor={`games-${game.gameId}`}
-            className="block text-xs font-medium text-gray-600 mb-1"
+            className="block text-sm font-medium text-primary/80 mb-2"
           >
-            {" "}
-            Games:{" "}
+            Games to Win:
           </label>
           <select
             id={`games-${game.gameId}`}
             value={guess.inGames ?? ""}
             onChange={onGamesChange}
-            disabled={!guess.winner} // Disable if no winner selected
-            className="mt-1 block w-full pl-3 pr-10 py-1.5 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md disabled:opacity-50 disabled:bg-gray-100"
+            className="w-full px-3 py-2 text-sm border border-secondary/30 rounded-lg
+                     bg-white focus:ring-2 focus:ring-accent/30 focus:border-accent
+                     disabled:opacity-50 disabled:bg-background/50"
           >
             <option value="" disabled>
-              Select
+              Select number of games
             </option>
-            <option value="4">in 4</option>
-            <option value="5">in 5</option>
-            <option value="6">in 6</option>
-            <option value="7">in 7</option>
+            <option value="4">in 4 games</option>
+            <option value="5">in 5 games</option>
+            <option value="6">in 6 games</option>
+            <option value="7">in 7 games</option>
           </select>
         </div>
       )}
