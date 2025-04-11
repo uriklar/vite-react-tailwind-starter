@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import BracketDisplay from "./BracketDisplay";
 import bracketData from "../data/playoffBracketTemplate.json";
 import {
   createBin,
   getMasterIndex,
   updateMasterIndex,
-} from "../utils/jsonbin.js"; // Import the API utility
+} from "../utils/jsonbin.ts"; // Import the API utility
 
 // Define interfaces (consider moving to a shared types file later)
 interface Team {
