@@ -201,6 +201,8 @@ export const useBracketSubmission = (): UseBracketSubmissionReturn => {
             masterIndex.submissions.push({
               userId: userName.trim(),
               binId: createdBinId,
+              name: userName.trim(),
+              timestamp: new Date().toISOString(),
             });
             const indexUpdateResult = await updateMasterIndex(masterIndex);
             if (indexUpdateResult) {

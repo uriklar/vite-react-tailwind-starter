@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { calculateScore, determineRound } from "./scoring";
 import { PlayoffRound, PlayoffData } from "./types";
 

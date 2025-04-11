@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BracketDisplay from "./BracketDisplay"; // Reuse the display component
-import {
-  getOfficialResults,
-  getMasterIndex,
-  getBin,
-} from "../utils/jsonbin.js";
-import { calculateScore } from "../utils/scoring.ts"; // Import scoring utility
+import { getOfficialResults, getMasterIndex, getBin } from "../utils/jsonbin";
+import { calculateScore } from "../utils/scoring"; // Import scoring utility
 import bracketData from "../data/playoffBracketTemplate.json"; // For base structure
 
 // Interfaces (consider shared types file)
@@ -49,8 +45,10 @@ interface UserSubmission {
 
 // Interface for master index entries
 interface MasterIndexEntry {
-  userId: string;
   binId: string;
+  userId: string;
+  name: string;
+  timestamp: string;
 }
 
 // Interface for scoreboard data
