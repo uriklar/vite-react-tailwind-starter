@@ -5,7 +5,7 @@ import {
   getMasterIndex,
   getBin,
 } from "../utils/jsonbin.js";
-import { calculateScore } from "../utils/scoring.js"; // Import scoring utility
+import { calculateScore } from "../utils/scoring.ts"; // Import scoring utility
 import bracketData from "../data/playoffBracketTemplate.json"; // For base structure
 
 // Interfaces (consider shared types file)
