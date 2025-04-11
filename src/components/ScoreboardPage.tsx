@@ -225,65 +225,63 @@ const ScoreboardPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Scoreboard</h1>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          Official Results
-        </h2>
-        {isLoadingResults && (
-          <p className="text-center text-gray-600">
-            Loading official results...
-          </p>
-        )}
-        {errorResults && (
-          <p className="text-center text-red-600">Error: {errorResults}</p>
-        )}
-        {officialResults && !isLoadingResults && !errorResults && (
-          <BracketDisplay
-            games={resultsGames} // Display the populated structure
-            guesses={resultsGuesses} // Pass derived guesses to show selections
-            onGuessChange={() => {}} // No-op change handler
-            readOnly={true} // Ensure it's read-only
-            layoutMode="conferences" // Set the layout mode here
-          />
+    <div className="space-y-8">
+      {/* Scoreboard Section */}
+      <section className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-[#0c0c0d] mb-4">Scoreboard</h2>
+        {isLoadingScores ? (
+          <div className="text-center py-4">Loading scores...</div>
+        ) : errorScores ? (
+          <div className="text-red-500 text-center py-4">{errorScores}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#f4edfd]">
+                <tr>
+                  <th className="px-4 py-2 text-left text-[#0c0c0d]">Rank</th>
+                  <th className="px-4 py-2 text-left text-[#0c0c0d]">User</th>
+                  <th className="px-4 py-2 text-right text-[#0c0c0d]">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scoreboard.map((entry, index) => (
+                  <tr
+                    key={entry.userId}
+                    className={
+                      index === 0 ? "bg-[#fce07f]" : "hover:bg-[#f4edfd]"
+                    }
+                  >
+                    <td className="px-4 py-2 text-[#0c0c0d]">{index + 1}</td>
+                    <td className="px-4 py-2 text-[#0c0c0d]">{entry.userId}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-[#6837f8]">
+                      {entry.score}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
-      {/* User Scores Section */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4 text-center">User Scores</h2>
-        {isLoadingScores && (
-          <p className="text-center text-gray-600">Loading user scores...</p>
-        )}
-        {errorScores && !isLoadingScores && (
-          <p className="text-center text-red-600">
-            Error loading scores: {errorScores}
-          </p>
-        )}
-        {!isLoadingScores && !errorScores && scoreboard.length === 0 && (
-          <p className="text-center text-gray-500">
-            No user submissions found yet.
-          </p>
-        )}
-        {!isLoadingScores && !errorScores && scoreboard.length > 0 && (
-          <div className="max-w-md mx-auto bg-white shadow-md rounded-lg overflow-hidden">
-            <ul className="divide-y divide-gray-200">
-              {scoreboard.map((entry, index) => (
-                <li
-                  key={entry.userId}
-                  className="px-6 py-4 flex justify-between items-center"
-                >
-                  <span className="text-sm font-medium text-gray-900">
-                    {index + 1}. {entry.userId}
-                  </span>
-                  <span className="text-sm font-bold text-blue-600">
-                    {entry.score} pts
-                  </span>
-                </li>
-              ))}
-            </ul>
+      {/* Results Section */}
+      <section className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-[#0c0c0d] mb-4">
+          Official Results
+        </h2>
+        {isLoadingResults ? (
+          <div className="text-center py-4">Loading results...</div>
+        ) : errorResults ? (
+          <div className="text-red-500 text-center py-4">{errorResults}</div>
+        ) : (
+          <div className="bg-[#f4edfd] rounded-lg p-4">
+            <BracketDisplay
+              games={resultsGames}
+              guesses={resultsGuesses}
+              readOnly={true}
+              onGuessChange={() => {}}
+              layoutMode="conferences"
+            />
           </div>
         )}
       </section>

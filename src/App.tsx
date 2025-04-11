@@ -1,29 +1,30 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import BracketSubmissionPage from "./components/BracketSubmissionPage";
-import ScoreboardPage from "./components/ScoreboardPage"; // Import the real component
+import ScoreboardPage from "./components/ScoreboardPage";
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-md p-4 mb-6">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link
-              to="/"
-              className="text-xl font-bold text-blue-600 hover:text-blue-800"
-            >
-              NBA Bracket Challenge
+      <div className="min-h-screen bg-[#f4edfd]">
+        <nav className="bg-[#fce07f] shadow-md">
+          <div className="container mx-auto flex justify-between items-center py-3 px-4">
+            <Link to="/" className="flex items-center">
+              <img
+                src="https://images.crunchbase.com/image/upload/c_pad,h_170,w_170,f_auto,b_white,q_auto:eco,dpr_1/tkpmwkhygxd8yltooa5s"
+                alt="NBA Bracket Challenge Logo"
+                className="h-8 w-8 object-contain"
+              />
             </Link>
-            <div>
+            <div className="space-x-4">
               <Link
-                to="/"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                to="/submit"
+                className="text-[#0c0c0d] hover:text-[#6837f8] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Submit Bracket
               </Link>
               <Link
-                to="/scoreboard"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                to="/"
+                className="text-[#0c0c0d] hover:text-[#6837f8] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Scoreboard
               </Link>
@@ -31,11 +32,10 @@ function App() {
           </div>
         </nav>
 
-        <main>
+        <main className="container mx-auto px-4 py-6">
           <Routes>
-            <Route path="/" element={<BracketSubmissionPage />} />
-            {/* Use the real ScoreboardPage component */}
-            <Route path="/scoreboard" element={<ScoreboardPage />} />
+            <Route path="/" element={<ScoreboardPage />} />
+            <Route path="/submit" element={<BracketSubmissionPage />} />
           </Routes>
         </main>
       </div>
