@@ -1,333 +1,159 @@
-import React, { useState } from "react";
+import React from "react";
 import BracketDisplay from "./BracketDisplay";
-import bracketData from "../data/playoffBracketTemplate.json";
-import {
-  createBin,
-  getMasterIndex,
-  updateMasterIndex,
-} from "../utils/jsonbin.ts"; // Import the API utility
+import { useBracketSubmission } from "../hooks/useBracketSubmission";
 
-// Define interfaces (consider moving to a shared types file later)
-interface Team {
-  name: string;
-  seed: number | null;
-  logo: string;
-}
-
-interface Game {
-  gameId: string;
-  round: number;
-  conference: string;
-  matchup: number;
-  nextGameId: string | null;
-  team1: Team;
-  team2: Team;
-}
-
-interface Guess {
-  winner: Team | null;
-  inGames: number | null;
-}
-
-interface Guesses {
-  [gameId: string]: Guess;
-}
-
-// Define the structure for saving to JSONBin
-interface SubmissionData {
-  userId: string;
-  guess: {
-    // Note: Saving only winner NAME, not the full object
-    [gameId: string]: {
-      winner: string;
-      inGames: number;
-    };
-  };
-}
+// Import fonts in your main CSS file or index.html:
+// font-family: 'Inter', sans-serif - for body text
+// font-family: 'Montserrat', sans-serif - for headings
 
 const BracketSubmissionPage: React.FC = () => {
-  const [userName, setUserName] = useState<string>("");
-  // State for the bracket structure that gets displayed (updates as winners are chosen)
-  const [displayedGames, setDisplayedGames] = useState<Game[]>(() =>
-    // Deep clone to avoid modifying the original template import
-    JSON.parse(JSON.stringify(bracketData.games))
-  );
-  // State for the user's actual selections
-  const [guesses, setGuesses] = useState<Guesses>({});
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submitStatus, setSubmitStatus] = useState<
-    "idle" | "success" | "error" | "error-index"
-  >("idle");
-  const [binId, setBinId] = useState<string | null>(null); // To store the created bin ID
-
-  // TODO: Add handler for form submission
-
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUserName(event.target.value);
-  };
-
-  const handleGuessChange = (
-    gameId: string,
-    selectedWinner: Team | null,
-    selectedGames: number | null
-  ) => {
-    const currentGame = displayedGames.find((g) => g.gameId === gameId);
-    if (!currentGame) return;
-
-    // 1. Update guesses state
-    setGuesses((prev) => {
-      const updatedGuess: Guess = {
-        winner: selectedWinner,
-        // Only store games if a winner is selected
-        inGames: selectedWinner
-          ? selectedGames ?? prev[gameId]?.inGames ?? null
-          : null,
-      };
-      // If winner is deselected, clear games too
-      if (!selectedWinner) {
-        updatedGuess.inGames = null;
-      }
-      return {
-        ...prev,
-        [gameId]: updatedGuess,
-      };
-    });
-
-    // 2. Update displayedGames state for the *next* round
-    if (!currentGame.nextGameId) return; // Final game, no propagation needed
-
-    const nextGameIndex = displayedGames.findIndex(
-      (g) => g.gameId === currentGame.nextGameId
-    );
-    if (nextGameIndex === -1) return;
-
-    // Find all games feeding into the next game to determine slots
-    const gamesFeedingNext = displayedGames
-      .filter((g) => g.nextGameId === currentGame.nextGameId)
-      .sort((a, b) => a.matchup - b.matchup); // Sort determines team1/team2 slot
-
-    const slotIndex = gamesFeedingNext.findIndex((g) => g.gameId === gameId); // 0 means this game feeds team1, 1 means team2
-
-    // Get the winner from the *other* game feeding into the next game
-    const otherGame = gamesFeedingNext[1 - slotIndex];
-    const otherGameWinner = otherGame
-      ? guesses[otherGame.gameId]?.winner
-      : null;
-
-    // Determine the correct teams for the next game based on current selections
-    let nextTeam1: Team | null = null;
-    let nextTeam2: Team | null = null;
-
-    if (slotIndex === 0) {
-      // Current selection feeds team1
-      nextTeam1 = selectedWinner;
-      nextTeam2 = otherGameWinner;
-    } else if (slotIndex === 1) {
-      // Current selection feeds team2
-      nextTeam1 = otherGameWinner;
-      nextTeam2 = selectedWinner;
-    }
-
-    // Find the original template for the next game to get default placeholders
-    const templateNextGame = bracketData.games.find(
-      (g) => g.gameId === currentGame.nextGameId
-    );
-    const defaultTeam1 = templateNextGame
-      ? templateNextGame.team1
-      : { name: "TBD", seed: null, logo: "" };
-    const defaultTeam2 = templateNextGame
-      ? templateNextGame.team2
-      : { name: "TBD", seed: null, logo: "" };
-
-    // Update the displayedGames state
-    setDisplayedGames((prevGames) => {
-      const newGames = [...prevGames];
-      const nextGameToUpdate = { ...newGames[nextGameIndex] }; // Clone the specific game
-
-      // Assign the determined winner or the default placeholder
-      nextGameToUpdate.team1 = nextTeam1 ?? defaultTeam1;
-      nextGameToUpdate.team2 = nextTeam2 ?? defaultTeam2;
-
-      newGames[nextGameIndex] = nextGameToUpdate;
-      return newGames;
-    });
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent default form submission
-    setSubmitStatus("idle");
-    setBinId(null);
-
-    if (!userName.trim()) {
-      alert("Please enter your name.");
-      return;
-    }
-
-    // Basic validation: Check if all games have a winner and game count selected
-    const totalGames = displayedGames.length;
-    const completedGuesses = Object.values(guesses).filter(
-      (g) => g.winner && g.inGames !== null
-    ).length;
-
-    if (completedGuesses < totalGames) {
-      alert(`Please complete all ${totalGames} matchups before submitting.`);
-      return;
-    }
-
-    // Format data for submission
-    const submissionPayload: SubmissionData = {
-      userId: userName.trim(),
-      guess: {},
-    };
-
-    for (const gameId in guesses) {
-      const guess = guesses[gameId];
-      if (guess.winner && guess.inGames !== null) {
-        submissionPayload.guess[gameId] = {
-          winner: guess.winner.name, // Store only the name
-          inGames: guess.inGames,
-        };
-      }
-    }
-
-    setIsSubmitting(true);
-    let createdBinId: string | null = null;
-
-    try {
-      // 1. Create user guess bin
-      const result = await createBin(
-        submissionPayload,
-        `bracket_${userName.trim()}`
-      );
-      if (result && result.metadata && result.metadata.id) {
-        createdBinId = result.metadata.id;
-        setBinId(createdBinId);
-        console.log(
-          "User guess bin created successfully! Bin ID:",
-          createdBinId
-        );
-
-        // 2. Update master index bin
-        try {
-          const masterIndex = await getMasterIndex();
-          if (masterIndex) {
-            // Add or update entry (simple add for now, could check for duplicates)
-            masterIndex.submissions.push({
-              userId: userName.trim(),
-              binId: createdBinId,
-            });
-            const indexUpdateResult = await updateMasterIndex(masterIndex);
-            if (indexUpdateResult) {
-              console.log("Master index updated successfully.");
-              setSubmitStatus("success");
-            } else {
-              console.error("Failed to update master index.");
-              // Still technically a success for user submission, but log the index error
-              setSubmitStatus("success"); // Or set a specific warning state
-              alert(
-                "Submission saved, but failed to update master index. Please contact admin."
-              );
-            }
-          } else {
-            console.error("Could not retrieve master index to update.");
-            setSubmitStatus("success"); // Submission saved, but index failed
-            alert(
-              "Submission saved, but failed to update master index. Please contact admin."
-            );
-          }
-        } catch (indexError) {
-          console.error("Error updating master index:", indexError);
-          setSubmitStatus("success"); // Submission saved, but index failed
-          alert(
-            "Submission saved, but failed to update master index. Please contact admin."
-          );
-        }
-      } else {
-        throw new Error(
-          "Failed to create user guess bin or received invalid response."
-        );
-      }
-    } catch (error) {
-      console.error("Submission failed:", error);
-      setSubmitStatus("error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    userName,
+    displayedGames,
+    guesses,
+    isSubmitting,
+    submitStatus,
+    binId,
+    handleNameChange,
+    handleGuessChange,
+    handleSubmit,
+  } = useBracketSubmission();
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        Submit Your Bracket
-      </h1>
+    <div className="min-h-screen bg-[#f4edfd]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl font-bold text-[#0c0c0d] mb-2 font-montserrat text-center">
+            March Madness Bracket
+          </h1>
+          <p className="text-lg text-[#0c0c0d]/80 mb-8 text-center font-inter">
+            Fill out your predictions for the tournament
+          </p>
 
-      {/* Wrap in a form element */}
-      <form onSubmit={handleSubmit}>
-        <div className="mb-6">
-          <label
-            htmlFor="userName"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Your Name:
-          </label>
-          <input
-            type="text"
-            id="userName"
-            value={userName}
-            onChange={handleNameChange}
-            placeholder="Enter your name"
-            required
-            disabled={isSubmitting || submitStatus === "success"} // Disable after success
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
-          />
-        </div>
-
-        {/* Pass displayedGames, guesses, and handler to BracketDisplay */}
-        <BracketDisplay
-          games={displayedGames}
-          guesses={guesses}
-          onGuessChange={handleGuessChange}
-          readOnly={isSubmitting || submitStatus === "success"} // Make read-only during/after submission
-          layoutMode="conferences"
-        />
-
-        <div className="mt-8 text-center">
-          {(submitStatus === "idle" || submitStatus === "error") && (
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting
-                ? "Submitting..."
-                : submitStatus === "error"
-                ? "Retry Submission"
-                : "Submit Bracket"}
-            </button>
-          )}
-
-          {submitStatus === "success" && (
-            <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-              <p className="font-bold">Success!</p>
-              <p>
-                Your bracket has been submitted. Your submission ID is: {binId}
-              </p>
-              {/* Maybe add a link to view scoreboard later */}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-[#d5c8f9]">
+              <label
+                htmlFor="userName"
+                className="block text-sm font-medium text-[#0c0c0d] mb-2 font-inter"
+              >
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="userName"
+                value={userName}
+                onChange={handleNameChange}
+                placeholder="Enter your name to submit"
+                required
+                disabled={isSubmitting || submitStatus === "success"}
+                className="w-full px-4 py-2 border border-[#d5c8f9] rounded-lg focus:ring-2 focus:ring-[#6837f8] focus:border-transparent transition duration-200 disabled:bg-[#f4edfd] disabled:cursor-not-allowed font-inter"
+              />
             </div>
-          )}
 
-          {submitStatus === "error" && (
-            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              <p className="font-bold">Submission Failed</p>
-              <p>
-                Could not submit your bracket. Please check your connection or
-                API key and try again.
-              </p>
-              {/* Button is already handled above for retry */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-[#d5c8f9]">
+              <BracketDisplay
+                games={displayedGames}
+                guesses={guesses}
+                onGuessChange={handleGuessChange}
+                readOnly={isSubmitting || submitStatus === "success"}
+                layoutMode="conferences"
+              />
             </div>
-          )}
+
+            <div className="flex flex-col items-center space-y-4">
+              {(submitStatus === "idle" || submitStatus === "error") && (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#6837f8] hover:bg-[#6837f8]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6837f8] disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 font-inter shadow-md"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : submitStatus === "error" ? (
+                    "Try Again"
+                  ) : (
+                    "Submit Bracket"
+                  )}
+                </button>
+              )}
+
+              {submitStatus === "success" && (
+                <div className="w-full bg-[#fce07f]/20 border border-[#fce07f] rounded-lg p-6 text-[#0c0c0d]">
+                  <div className="flex items-center mb-4">
+                    <svg
+                      className="h-6 w-6 text-[#6837f8] mr-2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <h3 className="text-lg font-semibold font-montserrat">
+                      Submission Successful!
+                    </h3>
+                  </div>
+                  <p className="text-[#0c0c0d]/80 mb-2 font-inter">
+                    Your bracket has been submitted successfully.
+                  </p>
+                  <p className="text-sm text-[#0c0c0d]/60 font-inter">
+                    Submission ID: {binId}
+                  </p>
+                </div>
+              )}
+
+              {submitStatus === "error" && (
+                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-6 text-red-800">
+                  <div className="flex items-center mb-4">
+                    <svg
+                      className="h-6 w-6 text-red-600 mr-2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <h3 className="text-lg font-semibold font-montserrat">
+                      Submission Failed
+                    </h3>
+                  </div>
+                  <p className="text-red-700 mb-2 font-inter">
+                    We couldn't submit your bracket. Please check your
+                    connection and try again.
+                  </p>
+                </div>
+              )}
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
