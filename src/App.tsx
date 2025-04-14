@@ -5,8 +5,8 @@ import ScoreboardPage from "./components/ScoreboardPage";
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#f4edfd]">
-        <nav className="bg-[#fce07f] shadow-md">
+      <div className="min-h-screen bg-[#f8f5fd]">
+        <nav className="bg-[#ffd866] shadow-md">
           <div className="container mx-auto flex justify-between items-center py-3 px-4">
             <Link to="/" className="flex items-center">
               <img
@@ -18,13 +18,13 @@ function App() {
             <div className="space-x-4">
               <Link
                 to="/submit"
-                className="text-[#0c0c0d] hover:text-[#6837f8] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                className="text-[#1a1a1d] hover:text-[#5a2ee5] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Submit Bracket
               </Link>
               <Link
                 to="/"
-                className="text-[#0c0c0d] hover:text-[#6837f8] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                className="text-[#1a1a1d] hover:text-[#5a2ee5] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Scoreboard
               </Link>

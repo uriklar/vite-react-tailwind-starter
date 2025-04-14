@@ -20,32 +20,31 @@ export default {
     },
     extend: {
       colors: {
-        border: "#E5E7EB", // Tailwind gray-200
-        input: "#E0E0E0",
-        ring: "#C4B5FD", // soft lavender ring
-        background: "#FAF8FF", // lighter, airier purple
-        foreground: "#1F1F1F",
-
-        primary: "#0C0C0D",
-        secondary: "#E6DBFB", // lighter version of your current #d5c8f9
+        border: "#e0d6fa",
+        input: "#e0d6fa",
+        ring: "#5a2ee5",
+        background: '#f8f5fd',
+        foreground: "#1a1a1d",
+        primary: '#1a1a1d',
+        secondary: '#e0d6fa',
         destructive: {
-          DEFAULT: "#EF4444",
-          foreground: "#FFFFFF",
+          DEFAULT: "#e11d48",
+          foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "#F3F4F6", // light gray
-          foreground: "#6B7280", // gray-500
+          DEFAULT: "#e9e2f8",
+          foreground: "#64638f",
         },
-        accent: "#6837F8", // keep as-is for vividness
+        accent: '#5a2ee5',
         popover: {
-          DEFAULT: "#FFFFFF",
-          foreground: "#1F1F1F",
+          DEFAULT: "#ffffff",
+          foreground: "#1a1a1d",
         },
         card: {
-          DEFAULT: "#FFFFFF",
-          foreground: "#1F1F1F",
+          DEFAULT: "#ffffff",
+          foreground: "#1a1a1d",
         },
-        highlight: "#FDE68A", // replaces sharp #fce07f with soft pastel gold
+        highlight: '#ffd866',
       },
       borderRadius: {
         lg: "var(--radius)",

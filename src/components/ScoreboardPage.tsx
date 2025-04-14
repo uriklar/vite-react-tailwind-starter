@@ -228,7 +228,7 @@ const ScoreboardPage: React.FC = () => {
     <div className="space-y-8">
       {/* Scoreboard Section */}
       <section className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-[#0c0c0d] mb-4">Scoreboard</h2>
+        <h2 className="text-2xl font-bold text-[#1a1a1d] mb-4">Scoreboard</h2>
         {isLoadingScores ? (
           <div className="text-center py-4">Loading scores...</div>
         ) : errorScores ? (
@@ -236,11 +236,11 @@ const ScoreboardPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#f4edfd]">
+              <thead className="bg-[#f8f5fd]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-[#0c0c0d]">Rank</th>
-                  <th className="px-4 py-2 text-left text-[#0c0c0d]">User</th>
-                  <th className="px-4 py-2 text-right text-[#0c0c0d]">Score</th>
+                  <th className="px-4 py-2 text-left text-[#1a1a1d]">Rank</th>
+                  <th className="px-4 py-2 text-left text-[#1a1a1d]">User</th>
+                  <th className="px-4 py-2 text-right text-[#1a1a1d]">Score</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,12 +248,12 @@ const ScoreboardPage: React.FC = () => {
                   <tr
                     key={entry.userId}
                     className={
-                      index === 0 ? "bg-[#fce07f]" : "hover:bg-[#f4edfd]"
+                      index === 0 ? "bg-[#ffd866]" : "hover:bg-[#f8f5fd]"
                     }
                   >
-                    <td className="px-4 py-2 text-[#0c0c0d]">{index + 1}</td>
-                    <td className="px-4 py-2 text-[#0c0c0d]">{entry.userId}</td>
-                    <td className="px-4 py-2 text-right font-semibold text-[#6837f8]">
+                    <td className="px-4 py-2 text-[#1a1a1d]">{index + 1}</td>
+                    <td className="px-4 py-2 text-[#1a1a1d]">{entry.userId}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-[#5a2ee5]">
                       {entry.score}
                     </td>
                   </tr>
@@ -266,7 +266,7 @@ const ScoreboardPage: React.FC = () => {
 
       {/* Results Section */}
       <section className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-[#0c0c0d] mb-4">
+        <h2 className="text-2xl font-bold text-[#1a1a1d] mb-4">
           Official Results
         </h2>
         {isLoadingResults ? (
@@ -274,7 +274,7 @@ const ScoreboardPage: React.FC = () => {
         ) : errorResults ? (
           <div className="text-red-500 text-center py-4">{errorResults}</div>
         ) : (
-          <div className="bg-[#f4edfd] rounded-lg p-4">
+          <div className="bg-[#f8f5fd] rounded-lg p-4">
             <BracketDisplay
               games={resultsGames}
               guesses={resultsGuesses}
