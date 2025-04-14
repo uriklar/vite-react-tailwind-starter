@@ -20,31 +20,32 @@ export default {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: '#f4edfd',
-        foreground: "hsl(var(--foreground))",
-        primary: '#0c0c0d',
-        secondary: '#d5c8f9',
+        border: "#E5E7EB", // Tailwind gray-200
+        input: "#E0E0E0",
+        ring: "#C4B5FD", // soft lavender ring
+        background: "#FAF8FF", // lighter, airier purple
+        foreground: "#1F1F1F",
+
+        primary: "#0C0C0D",
+        secondary: "#E6DBFB", // lighter version of your current #d5c8f9
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "#EF4444",
+          foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#F3F4F6", // light gray
+          foreground: "#6B7280", // gray-500
         },
-        accent: '#6837f8',
+        accent: "#6837F8", // keep as-is for vividness
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "#FFFFFF",
+          foreground: "#1F1F1F",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "#FFFFFF",
+          foreground: "#1F1F1F",
         },
-        highlight: '#fce07f',
+        highlight: "#FDE68A", // replaces sharp #fce07f with soft pastel gold
       },
       borderRadius: {
         lg: "var(--radius)",
