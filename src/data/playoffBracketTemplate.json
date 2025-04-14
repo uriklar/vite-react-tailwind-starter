@@ -7,9 +7,9 @@
             "matchup": 1,
             "nextGameId": "ESF1",
             "team1": {
-                "name": "Boston Celtics",
+                "name": "Cleveland Cavaliers",
                 "seed": 1,
-                "logo": "https://i.shgcdn.com/81da592d-d5cc-41a9-af3a-c40b64b8f73a/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/eace5363-aa26-480c-b534-a80ae4ad26f4/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
                 "name": "Chicago Bulls",
@@ -24,14 +24,14 @@
             "matchup": 2,
             "nextGameId": "ESF1",
             "team1": {
-                "name": "Cleveland Cavaliers",
+                "name": "Indiana Pacers",
                 "seed": 4,
-                "logo": "https://i.shgcdn.com/eace5363-aa26-480c-b534-a80ae4ad26f4/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/a2efe091-2c05-436e-92ce-783ca2bd4eac/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
-                "name": "Orlando Magic",
+                "name": "Milwaukee Bucks",
                 "seed": 5,
-                "logo": "https://i.shgcdn.com/966192db-bf7f-4203-a2a5-9208c25e810c/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": ""
             }
         },
         {
@@ -41,14 +41,14 @@
             "matchup": 3,
             "nextGameId": "ESF2",
             "team1": {
-                "name": "Philadelphia 76ers",
+                "name": "New York Knicks",
                 "seed": 3,
-                "logo": "https://i.shgcdn.com/2d64c5cf-322d-452c-ab44-14b7d6996d5f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/7ba96efe-0f70-4fc3-8938-ed8f38c4083e/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
-                "name": "Indiana Pacers",
+                "name": "Detroit Pistons",
                 "seed": 6,
-                "logo": "https://i.shgcdn.com/a2efe091-2c05-436e-92ce-783ca2bd4eac/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": ""
             }
         },
         {
@@ -58,14 +58,14 @@
             "matchup": 4,
             "nextGameId": "ESF2",
             "team1": {
-                "name": "New York Knicks",
+                "name": "Boston Celtics",
                 "seed": 2,
-                "logo": "https://i.shgcdn.com/7ba96efe-0f70-4fc3-8938-ed8f38c4083e/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/81da592d-d5cc-41a9-af3a-c40b64b8f73a/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
-                "name": "Miami Heat",
+                "name": "Orlando Magic",
                 "seed": 7,
-                "logo": "https://i.shgcdn.com/3a0d023e-ca8a-4e4d-8bcf-1e6835479cb5/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/966192db-bf7f-4203-a2a5-9208c25e810c/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
@@ -75,14 +75,14 @@
             "matchup": 1,
             "nextGameId": "WSF1",
             "team1": {
-                "name": "Denver Nuggets",
+                "name": "Oklahoma City Thunder",
                 "seed": 1,
-                "logo": "https://i.shgcdn.com/9c0f4588-c45c-4422-a1ef-f0abf7493026/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": ""
             },
             "team2": {
-                "name": "Minnesota Timberwolves",
+                "name": "Los Angeles Clippers",
                 "seed": 8,
-                "logo": "https://i.shgcdn.com/6e6d8489-4386-4931-a3ad-0599da11c652/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/72a132d6-f158-4983-bfdc-def8ab235672/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
@@ -92,14 +92,14 @@
             "matchup": 2,
             "nextGameId": "WSF1",
             "team1": {
-                "name": "Phoenix Suns",
+                "name": "Denver Nuggets",
                 "seed": 4,
-                "logo": "https://i.shgcdn.com/5707aaea-df26-45d6-b221-d06df8ba9d47/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/9c0f4588-c45c-4422-a1ef-f0abf7493026/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
-                "name": "Los Angeles Clippers",
+                "name": "Minnesota Timberwolves",
                 "seed": 5,
-                "logo": "https://i.shgcdn.com/72a132d6-f158-4983-bfdc-def8ab235672/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/6e6d8489-4386-4931-a3ad-0599da11c652/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
@@ -109,9 +109,9 @@
             "matchup": 3,
             "nextGameId": "WSF2",
             "team1": {
-                "name": "Sacramento Kings",
+                "name": "Los Angeles Lakers",
                 "seed": 3,
-                "logo": "https://i.shgcdn.com/6b8dc1e2-49ea-4f0d-83f0-ffbc849cdb9f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/0fcfdc90-889c-430a-956d-71d7e5046776/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
                 "name": "Golden State Warriors",
@@ -126,14 +126,14 @@
             "matchup": 4,
             "nextGameId": "WSF2",
             "team1": {
-                "name": "Memphis Grizzlies",
+                "name": "Houston Rockets",
                 "seed": 2,
-                "logo": "https://i.shgcdn.com/098b6944-6bea-4eb0-a942-7baa065f2b3b/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": ""
             },
             "team2": {
-                "name": "Los Angeles Lakers",
+                "name": "Sacramento Kings",
                 "seed": 7,
-                "logo": "https://i.shgcdn.com/0fcfdc90-889c-430a-956d-71d7e5046776/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://i.shgcdn.com/6b8dc1e2-49ea-4f0d-83f0-ffbc849cdb9f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
