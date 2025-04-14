@@ -58,8 +58,6 @@ interface ScoreboardEntry {
 }
 
 const ScoreboardPage: React.FC = () => {
-  const [officialResults, setOfficialResults] =
-    useState<OfficialResults | null>(null);
   const [isLoadingResults, setIsLoadingResults] = useState<boolean>(true);
   const [errorResults, setErrorResults] = useState<string | null>(null);
 
@@ -79,7 +77,6 @@ const ScoreboardPage: React.FC = () => {
       setIsLoadingScores(true);
       setErrorResults(null);
       setErrorScores(null);
-      setOfficialResults(null);
       setScoreboard([]);
 
       try {
@@ -88,7 +85,6 @@ const ScoreboardPage: React.FC = () => {
         if (!results) {
           throw new Error("Could not fetch official results.");
         }
-        setOfficialResults(results);
         processResultsForDisplay(results); // Update results display
         setIsLoadingResults(false); // Results loaded
 
@@ -148,13 +144,17 @@ const ScoreboardPage: React.FC = () => {
         scores.sort((a, b) => b.score - a.score);
 
         setScoreboard(scores);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
         // Determine if error was during results or scores fetching
         if (isLoadingResults)
-          setErrorResults(err.message || "An error occurred fetching results.");
+          setErrorResults(
+            (err instanceof Error ? err.message : String(err)) ||
+              "An error occurred fetching results."
+          );
         setErrorScores(
-          err.message || "An error occurred fetching or processing user scores."
+          (err instanceof Error ? err.message : String(err)) ||
+            "An error occurred fetching or processing user scores."
         );
       } finally {
         // Ensure loading states are false if not already set
@@ -168,7 +168,7 @@ const ScoreboardPage: React.FC = () => {
 
   // Helper to populate the bracket structure and guesses based on official results
   const processResultsForDisplay = (results: OfficialResults) => {
-    let currentGames: Game[] = JSON.parse(JSON.stringify(bracketData.games));
+    const currentGames: Game[] = JSON.parse(JSON.stringify(bracketData.games));
     const derivedGuesses: Guesses = {};
 
     // Use a loop that processes rounds sequentially to ensure winners propagate correctly
