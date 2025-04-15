@@ -96,7 +96,10 @@ const GameCard: React.FC<{
   );
 
   const hasGuessedWinner = guess && guess.winner;
-  const showGamesDropdown = !readOnly && hasGuessedWinner;
+  const showGamesInfo = hasGuessedWinner;
+
+  // Determine the text to display for games predicted
+  const gamesText = guess?.inGames ? `in ${guess.inGames} games` : "Not set";
 
   return (
     <div
@@ -133,31 +136,32 @@ const GameCard: React.FC<{
         />
       </div>
 
-      {showGamesDropdown && (
+      {showGamesInfo && (
         <div className="mt-4 p-3 bg-background/30 rounded-lg">
-          <label
-            htmlFor={`games-${game.gameId}`}
-            className="block text-sm font-medium text-primary/80 mb-2"
-          >
-            Games to Win:
+          <label className="block text-sm font-medium text-primary/80 mb-2">
+            Games Predicted:
           </label>
-          <select
-            id={`games-${game.gameId}`}
-            value={guess?.inGames ?? ""}
-            onChange={onGamesChange}
-            disabled={readOnly}
-            className="w-full px-3 py-2 text-sm border border-secondary/30 rounded-lg
-                     bg-white focus:ring-2 focus:ring-accent/30 focus:border-accent
-                     disabled:opacity-50 disabled:bg-background/50"
-          >
-            <option value="" disabled>
-              Select number of games
-            </option>
-            <option value="4">in 4 games</option>
-            <option value="5">in 5 games</option>
-            <option value="6">in 6 games</option>
-            <option value="7">in 7 games</option>
-          </select>
+          {readOnly ? (
+            <p className="w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 border border-secondary/30 rounded-lg">
+              {gamesText}
+            </p>
+          ) : (
+            <select
+              id={`games-${game.gameId}`}
+              value={guess?.inGames ?? ""}
+              onChange={onGamesChange}
+              className="w-full px-3 py-2 text-sm border border-secondary/30 rounded-lg
+                       bg-white focus:ring-2 focus:ring-accent/30 focus:border-accent"
+            >
+              <option value="" disabled>
+                Select number of games
+              </option>
+              <option value="4">in 4 games</option>
+              <option value="5">in 5 games</option>
+              <option value="6">in 6 games</option>
+              <option value="7">in 7 games</option>
+            </select>
+          )}
         </div>
       )}
     </div>
@@ -247,19 +251,15 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
   };
 
   const handleGamesChange = (
-    game: Game,
+    gameId: string,
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     if (readOnly) return;
     const numGames = parseInt(event.target.value, 10);
-    const winnerTeam = guesses[game.gameId]?.winner; // Winner is Team | null
+    const winnerTeam = guesses[gameId]?.winner; // Winner is Team | null
 
     if (winnerTeam) {
-      onGuessChange(
-        game.gameId,
-        winnerTeam, // Pass the Team object directly
-        isNaN(numGames) ? null : numGames
-      );
+      onGuessChange(gameId, winnerTeam, isNaN(numGames) ? null : numGames);
     }
   };
 
@@ -367,7 +367,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
                       onWinnerChange={(winner) =>
                         handleWinnerChange(game, winner)
                       }
-                      onGamesChange={(e) => handleGamesChange(game, e)}
+                      onGamesChange={(e) => handleGamesChange(game.gameId, e)}
                       readOnly={readOnly}
                       isTeamSelectable={(team) => isTeamSelectable(team)}
                     />
@@ -408,7 +408,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
               game={game}
               guess={guessForCard}
               onWinnerChange={(winner) => handleWinnerChange(game, winner)}
-              onGamesChange={(e) => handleGamesChange(game, e)}
+              onGamesChange={(e) => handleGamesChange(game.gameId, e)}
               readOnly={readOnly}
               isTeamSelectable={(team) => isTeamSelectable(team)}
             />

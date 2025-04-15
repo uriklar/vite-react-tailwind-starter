@@ -36,7 +36,7 @@ const BracketSubmissionPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* User Information Card */}
             <section className="bg-white rounded-xl shadow-custom p-6 border border-secondary/30">
