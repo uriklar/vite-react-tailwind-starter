@@ -19,8 +19,6 @@ interface MasterIndex {
 const encodedApiKey = import.meta.env.VITE_JSONBIN_API_KEY;
 const API_KEY = encodedApiKey ? atob(encodedApiKey) : null; // Decode using atob()
 
-console.log("!!! DEBUG: Decoded API Key in jsonbin.js:", API_KEY); // Log the DECODED key
-
 const BASE_URL = "https://api.jsonbin.io/v3";
 
 export const createBin = async (

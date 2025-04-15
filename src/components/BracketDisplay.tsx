@@ -1,47 +1,22 @@
-import React, { useEffect, useRef } from "react";
-
-// Shared interfaces (consider moving to a types file)
-interface Team {
-  name: string;
-  seed: number | null;
-  logo: string;
-}
-
-interface Game {
-  gameId: string;
-  round: number;
-  conference: string;
-  matchup: number;
-  nextGameId: string | null;
-  team1: Team;
-  team2: Team;
-}
-
-interface Guess {
-  winner: Team | null;
-  inGames: number | null;
-}
-
-interface Guesses {
-  [gameId: string]: Guess;
-}
+import React, { useEffect, useRef, useMemo } from "react";
+// Import the corrected types from the central file
+import { Game, Guesses, Guess, Team } from "../types";
 
 interface BracketDisplayProps {
   games: Game[];
-  guesses: Guesses; // Receive current guesses
+  guesses: Guesses;
   onGuessChange: (
     gameId: string,
     winner: Team | null,
     inGames: number | null
-  ) => void; // Callback for changes
-  readOnly?: boolean; // Optional flag to disable controls
-  layoutMode?: "horizontal" | "conferences"; // Add layout mode prop
+  ) => void;
+  readOnly?: boolean;
+  layoutMode?: "horizontal" | "conferences";
 }
 
-// --- Helper Function to Render a Single Game --- (Extracted for reuse)
 const GameCard: React.FC<{
   game: Game;
-  guess: Guess;
+  guess: Guess | undefined;
   onWinnerChange: (winner: Team | null) => void;
   onGamesChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   readOnly: boolean;
@@ -56,7 +31,7 @@ const GameCard: React.FC<{
 }) => {
   const canSelectTeam1 = isTeamSelectable(game.team1);
   const canSelectTeam2 = isTeamSelectable(game.team2);
-  const canSelectGame = canSelectTeam1 && canSelectTeam2 && !readOnly;
+  const isGameSelectable = canSelectTeam1 && canSelectTeam2 && !readOnly;
 
   const TeamDisplay = ({
     team,
@@ -73,7 +48,7 @@ const GameCard: React.FC<{
           ? "bg-accent/5 border border-accent"
           : "hover:bg-background/50 border border-transparent"
       }
-      ${canSelectGame ? "cursor-pointer" : "cursor-not-allowed opacity-60"}
+      ${isGameSelectable ? "cursor-pointer" : "cursor-not-allowed opacity-60"}
     `}
     >
       <div className="flex-shrink-0 w-12 h-12 mr-3">
@@ -112,13 +87,16 @@ const GameCard: React.FC<{
           name={`winner-${game.gameId}`}
           value={team.name}
           checked={isSelected}
-          onChange={() => canSelectGame && onWinnerChange(team)}
-          disabled={!canSelectGame}
+          onChange={() => isGameSelectable && onWinnerChange(team)}
+          disabled={!isGameSelectable}
           className="h-4 w-4 text-accent border-secondary/30 focus:ring-accent/30 transition-all duration-200"
         />
       </div>
     </div>
   );
+
+  const hasGuessedWinner = guess && guess.winner;
+  const showGamesDropdown = !readOnly && hasGuessedWinner;
 
   return (
     <div
@@ -126,7 +104,7 @@ const GameCard: React.FC<{
       className={`
         border rounded-xl p-4 shadow-sm w-72 mb-4 transition-all duration-200
         ${
-          guess.winner
+          hasGuessedWinner
             ? "border-accent/30 bg-white"
             : "border-secondary/30 bg-white"
         }
@@ -137,7 +115,7 @@ const GameCard: React.FC<{
         <span className="text-xs font-medium text-primary/60 bg-secondary/10 px-2 py-1 rounded-full">
           {game.conference} - Match {game.matchup}
         </span>
-        {guess.winner && (
+        {hasGuessedWinner && (
           <span className="text-xs font-medium text-accent bg-accent/5 px-2 py-1 rounded-full">
             Winner Selected
           </span>
@@ -147,16 +125,15 @@ const GameCard: React.FC<{
       <div className="space-y-3">
         <TeamDisplay
           team={game.team1}
-          isSelected={guess.winner?.name === game.team1.name}
+          isSelected={guess?.winner?.name === game.team1.name}
         />
         <TeamDisplay
           team={game.team2}
-          isSelected={guess.winner?.name === game.team2.name}
+          isSelected={guess?.winner?.name === game.team2.name}
         />
       </div>
 
-      {/* Games Selection Dropdown */}
-      {canSelectGame && guess.winner && (
+      {showGamesDropdown && (
         <div className="mt-4 p-3 bg-background/30 rounded-lg">
           <label
             htmlFor={`games-${game.gameId}`}
@@ -166,8 +143,9 @@ const GameCard: React.FC<{
           </label>
           <select
             id={`games-${game.gameId}`}
-            value={guess.inGames ?? ""}
+            value={guess?.inGames ?? ""}
             onChange={onGamesChange}
+            disabled={readOnly}
             className="w-full px-3 py-2 text-sm border border-secondary/30 rounded-lg
                      bg-white focus:ring-2 focus:ring-accent/30 focus:border-accent
                      disabled:opacity-50 disabled:bg-background/50"
@@ -185,89 +163,141 @@ const GameCard: React.FC<{
     </div>
   );
 };
-// --- End Helper Function ---
+
+// Placeholder Team for games where winner is not yet decided
+const TBD_TEAM: Team = { name: "TBD", seed: null, logo: "" };
 
 const BracketDisplay: React.FC<BracketDisplayProps> = ({
-  games,
+  games: baseGames,
   guesses,
   onGuessChange,
   readOnly = false,
   layoutMode = "horizontal",
 }) => {
+  // --- Dynamic Game Processing ---
+  const processedGames = useMemo(() => {
+    console.log("Recalculating processedGames...");
+    if (!baseGames) return [];
+
+    const processed = new Map<string, Game>();
+
+    // Helper to get the winner Team object from a previous game's guess
+    const getWinnerOf = (gameId: string | null): Team => {
+      if (!gameId) return TBD_TEAM;
+      const guess = guesses[gameId];
+      return guess?.winner ?? TBD_TEAM;
+    };
+
+    const sortedBaseGames = [...baseGames].sort((a, b) => {
+      if (a.round !== b.round) return a.round - b.round;
+      return a.matchup - b.matchup;
+    });
+
+    for (const baseGame of sortedBaseGames) {
+      const processedGame = { ...baseGame };
+
+      if (processedGame.round > 1) {
+        const feederGames = sortedBaseGames.filter(
+          (g) => g.nextGameId === processedGame.gameId
+        );
+
+        const feederId1 = feederGames[0]?.gameId ?? null;
+        const feederId2 = feederGames[1]?.gameId ?? null;
+
+        if (feederGames.length === 2) {
+          processedGame.team1 = getWinnerOf(feederId1);
+          processedGame.team2 = getWinnerOf(feederId2);
+        } else if (processedGame.round === 4) {
+          const ecfGame = sortedBaseGames.find(
+            (g) => g.round === 3 && g.conference === "East"
+          );
+          const wcfGame = sortedBaseGames.find(
+            (g) => g.round === 3 && g.conference === "West"
+          );
+          processedGame.team1 = getWinnerOf(ecfGame?.gameId ?? null);
+          processedGame.team2 = getWinnerOf(wcfGame?.gameId ?? null);
+        } else {
+          processedGame.team1 = processedGame.team1.name.startsWith("Winner")
+            ? TBD_TEAM
+            : processedGame.team1;
+          processedGame.team2 = processedGame.team2.name.startsWith("Winner")
+            ? TBD_TEAM
+            : processedGame.team2;
+          console.warn(
+            `Incorrect number of feeder games (${feederGames.length}) found for ${processedGame.gameId}`
+          );
+        }
+      }
+      processed.set(processedGame.gameId, processedGame);
+    }
+    return Array.from(processed.values());
+  }, [baseGames, guesses]);
+  // --- End Dynamic Game Processing ---
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastVisibleRoundRef = useRef<HTMLDivElement>(null);
   const previousRoundsCountRef = useRef<number>(0);
 
-  const handleWinnerChange = (game: Game, winner: Team | null) => {
-    const currentGuess = guesses[game.gameId] || {
-      winner: null,
-      inGames: null,
-    };
-    const gamesSelection = winner ? currentGuess.inGames : null;
-    onGuessChange(game.gameId, winner, gamesSelection);
+  // Callbacks now work with Team objects, matching the state/types
+  const handleWinnerChange = (game: Game, winnerTeam: Team | null) => {
+    if (readOnly) return;
+    const currentGuess = guesses[game.gameId];
+    const gamesSelection = winnerTeam ? currentGuess?.inGames : null;
+    onGuessChange(game.gameId, winnerTeam, gamesSelection);
   };
 
   const handleGamesChange = (
     game: Game,
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
+    if (readOnly) return;
     const numGames = parseInt(event.target.value, 10);
-    const currentGuess = guesses[game.gameId] || {
-      winner: null,
-      inGames: null,
-    };
-    if (currentGuess.winner) {
+    const winnerTeam = guesses[game.gameId]?.winner; // Winner is Team | null
+
+    if (winnerTeam) {
       onGuessChange(
         game.gameId,
-        currentGuess.winner,
+        winnerTeam, // Pass the Team object directly
         isNaN(numGames) ? null : numGames
       );
     }
   };
 
   const isTeamSelectable = (team: Team): boolean => {
+    // Allow selecting TBD team to clear a future guess? Maybe not.
     return (
-      !team.name.toLowerCase().startsWith("winner ") && team.name !== "TBD"
+      team.name !== "TBD" && !team.name.toLowerCase().startsWith("winner ")
     );
   };
 
-  // Helper to check if prerequisite games for a round/conference are complete
   const canDisplayRound = (round: number, conference?: string): boolean => {
-    if (round === 1) return true; // Round 1 always visible
-
+    if (round === 1) return true;
     let prerequisiteGames: Game[] = [];
+
     if (round === 2 && conference) {
-      // Need all Round 1 games of the same conference
-      prerequisiteGames = games.filter(
+      prerequisiteGames = baseGames.filter(
         (g) => g.round === 1 && g.conference === conference
       );
     } else if (round === 3 && conference) {
-      // Need all Round 2 games of the same conference
-      prerequisiteGames = games.filter(
+      prerequisiteGames = baseGames.filter(
         (g) => g.round === 2 && g.conference === conference
       );
     } else if (round === 4) {
-      // Need both Round 3 games (conference finals)
-      prerequisiteGames = games.filter((g) => g.round === 3);
+      prerequisiteGames = baseGames.filter((g) => g.round === 3);
     }
-
     if (prerequisiteGames.length === 0) return false;
-
     return prerequisiteGames.every(
-      (game) =>
-        guesses[game.gameId]?.winner !== null &&
-        guesses[game.gameId]?.winner !== undefined
+      (game) => guesses[game.gameId]?.winner != null
     );
   };
 
-  // Helper function to get visible rounds count
   const getVisibleRoundsCount = (
     mode: "horizontal" | "conferences"
   ): number => {
     if (mode === "horizontal") {
-      return Array.from(new Set(games.map((game) => game.round))).length;
+      return Array.from(new Set(processedGames.map((game) => game.round)))
+        .length;
     }
-
     let count = 0;
     ["East", "West", "Finals"].forEach((conf) => {
       [1, 2, 3, 4].forEach((round) => {
@@ -279,10 +309,8 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     return count;
   };
 
-  // Effect to handle scrolling when new rounds appear
   useEffect(() => {
     const currentRoundsCount = getVisibleRoundsCount(layoutMode);
-
     if (
       currentRoundsCount > previousRoundsCountRef.current &&
       lastVisibleRoundRef.current
@@ -293,22 +321,20 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
         inline: "start",
       });
     }
-
     previousRoundsCountRef.current = currentRoundsCount;
-  }, [games, guesses, layoutMode]);
+  }, [processedGames, guesses, layoutMode]);
 
-  // --- Horizontal Layout ---
+  // --- Rendering Logic ---
+  // Use processedGames for rendering
   if (layoutMode === "horizontal") {
-    const rounds = Array.from(new Set(games.map((game) => game.round))).sort(
-      (a, b) => a - b
-    );
-
+    const rounds = Array.from(
+      new Set(processedGames.map((game) => game.round))
+    ).sort((a, b) => a - b);
     const getGamesByRound = (round: number): Game[] => {
-      return games
+      return processedGames
         .filter((game) => game.round === round)
         .sort((a, b) => a.matchup - b.matchup);
     };
-
     return (
       <div className="container mx-auto p-4">
         <div
@@ -331,21 +357,22 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
                   : "Round 1"}
               </h2>
               <div className="space-y-4">
-                {getGamesByRound(round).map((game) => (
-                  <GameCard
-                    key={game.gameId}
-                    game={game}
-                    guess={
-                      guesses[game.gameId] || { winner: null, inGames: null }
-                    }
-                    onWinnerChange={(winner) =>
-                      handleWinnerChange(game, winner)
-                    }
-                    onGamesChange={(e) => handleGamesChange(game, e)}
-                    readOnly={readOnly}
-                    isTeamSelectable={isTeamSelectable}
-                  />
-                ))}
+                {getGamesByRound(round).map((game) => {
+                  const guessForCard = guesses[game.gameId];
+                  return (
+                    <GameCard
+                      key={game.gameId}
+                      game={game}
+                      guess={guessForCard}
+                      onWinnerChange={(winner) =>
+                        handleWinnerChange(game, winner)
+                      }
+                      onGamesChange={(e) => handleGamesChange(game, e)}
+                      readOnly={readOnly}
+                      isTeamSelectable={(team) => isTeamSelectable(team)}
+                    />
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -354,14 +381,12 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     );
   }
 
-  // --- Conference Layout ---
   if (layoutMode === "conferences") {
     const getGames = (conference: string, round: number): Game[] => {
-      return games
+      return processedGames
         .filter((g) => g.conference === conference && g.round === round)
         .sort((a, b) => a.matchup - b.matchup);
     };
-
     const renderRound = (
       conference: string,
       round: number,
@@ -375,21 +400,22 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
         <h2 className="text-lg font-semibold mb-3 text-center h-10 flex items-center">
           {title}
         </h2>
-        {getGames(conference, round).map((game) => (
-          <GameCard
-            key={game.gameId}
-            game={game}
-            guess={guesses[game.gameId] || { winner: null, inGames: null }}
-            onWinnerChange={(winner) => handleWinnerChange(game, winner)}
-            onGamesChange={(e) => handleGamesChange(game, e)}
-            readOnly={readOnly}
-            isTeamSelectable={isTeamSelectable}
-          />
-        ))}
+        {getGames(conference, round).map((game) => {
+          const guessForCard = guesses[game.gameId];
+          return (
+            <GameCard
+              key={game.gameId}
+              game={game}
+              guess={guessForCard}
+              onWinnerChange={(winner) => handleWinnerChange(game, winner)}
+              onGamesChange={(e) => handleGamesChange(game, e)}
+              readOnly={readOnly}
+              isTeamSelectable={(team) => isTeamSelectable(team)}
+            />
+          );
+        })}
       </div>
     );
-
-    // Helper to determine if a round is the last visible one
     const isLastVisibleRound = (conference: string, round: number): boolean => {
       if (round === 4) return canDisplayRound(4);
       if (round === 3) {
@@ -401,29 +427,22 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
               canDisplayRound(3, "East")))
         );
       }
-      // Similar logic for rounds 2 and 1...
       return false;
     };
-
     return (
       <div className="container mx-auto p-4">
         <div
           ref={scrollContainerRef}
           className="flex flex-nowrap justify-start space-x-4 overflow-x-auto pb-4 min-w-max scroll-smooth"
         >
-          {/* Round 1 */}
           {canDisplayRound(1, "East") &&
             renderRound("East", 1, "East R1", isLastVisibleRound("East", 1))}
           {canDisplayRound(1, "West") &&
             renderRound("West", 1, "West R1", isLastVisibleRound("West", 1))}
-
-          {/* Round 2 */}
           {canDisplayRound(2, "East") &&
             renderRound("East", 2, "East R2", isLastVisibleRound("East", 2))}
           {canDisplayRound(2, "West") &&
             renderRound("West", 2, "West R2", isLastVisibleRound("West", 2))}
-
-          {/* Round 3 */}
           {canDisplayRound(3, "East") &&
             renderRound(
               "East",
@@ -438,8 +457,6 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
               "West Finals",
               isLastVisibleRound("West", 3)
             )}
-
-          {/* Finals */}
           {canDisplayRound(4) && renderRound("Finals", 4, "NBA Finals", true)}
         </div>
       </div>
