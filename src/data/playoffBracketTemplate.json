@@ -9,12 +9,12 @@
             "team1": {
                 "name": "Cleveland Cavaliers",
                 "seed": 1,
-                "logo": "https://i.shgcdn.com/eace5363-aa26-480c-b534-a80ae4ad26f4/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://loodibee.com/wp-content/uploads/nba-cleveland-cavaliers-logo-300x300.png"
             },
             "team2": {
-                "name": "Chicago Bulls",
+                "name": "Miami Heat",
                 "seed": 8,
-                "logo": "https://i.shgcdn.com/46f92a06-e91d-4c46-baff-9fbc5ba497de/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "logo": "https://loodibee.com/wp-content/uploads/nba-miami-heat-logo-300x300.png"
             }
         },
         {
@@ -80,9 +80,9 @@
                 "logo": "https://loodibee.com/wp-content/uploads/nba-oklahoma-city-thunder-logo-300x300.png"
             },
             "team2": {
-                "name": "Sacramento Kings",
-                "seed": 7,
-                "logo": "https://i.shgcdn.com/6b8dc1e2-49ea-4f0d-83f0-ffbc849cdb9f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "name": "Dallas Mavericks",
+                "seed": 8,
+                "logo": "https://loodibee.com/wp-content/uploads/nba-dallas-mavericks-logo-300x300.png"
             }
         },
         {
@@ -98,7 +98,7 @@
             },
             "team2": {
                 "name": "Los Angeles Clippers",
-                "seed": 8,
+                "seed": 5,
                 "logo": "https://loodibee.com/wp-content/uploads/NBA-LA-Clippers-logo-2024-300x300.png"
             }
         },
@@ -115,7 +115,7 @@
             },
             "team2": {
                 "name": "Minnesota Timberwolves",
-                "seed": 5,
+                "seed": 6,
                 "logo": "https://i.shgcdn.com/6e6d8489-4386-4931-a3ad-0599da11c652/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
@@ -132,7 +132,7 @@
             },
             "team2": {
                 "name": "Golden State Warriors",
-                "seed": 6,
+                "seed": 7,
                 "logo": "https://i.shgcdn.com/644a885d-e901-4b01-8b62-e24b4178d3b9/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },

@@ -48,7 +48,7 @@ const GameCard: React.FC<{
           ? "bg-accent/5 border border-accent"
           : "hover:bg-background/50 border border-transparent"
       }
-      ${isGameSelectable ? "cursor-pointer" : "cursor-not-allowed opacity-60"}
+      ${isGameSelectable ? "cursor-pointer" : "cursor-not-allowed"}
     `}
     >
       <div className="flex-shrink-0 w-12 h-12 mr-3">
