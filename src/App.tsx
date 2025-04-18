@@ -39,7 +39,7 @@ function App() {
           </div>
         </nav>
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="mx-auto px-4 py-6">
           <Routes>
             <Route path="/" element={<ScoreboardPage />} />
             <Route path="/submit" element={<BracketSubmissionPage />} />

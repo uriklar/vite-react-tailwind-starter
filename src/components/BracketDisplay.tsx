@@ -105,7 +105,7 @@ const GameCard: React.FC<{
     <div
       key={game.gameId}
       className={`
-        border rounded-xl p-4 shadow-sm w-72 mb-4 transition-all duration-200
+        border rounded-xl p-4 shadow-sm mb-4 transition-all duration-200
         ${
           hasGuessedWinner
             ? "border-accent/30 bg-white"
@@ -371,7 +371,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
         return null; // Don't render the column if prerequisites aren't met
       }
       return (
-        <div className="flex flex-col items-center mx-4 flex-shrink-0 w-72">
+        <div className="flex flex-col items-center mx-4 flex-shrink-0">
           <h2 className="text-lg font-semibold mb-3 text-center h-10 flex items-center">
             {title}
           </h2>
@@ -396,7 +396,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     };
 
     return (
-      <div className="container mx-auto p-4 overflow-x-auto">
+      <div className="p-4 overflow-x-auto">
         <div className="flex justify-center items-start min-w-max py-4">
           <div className="flex items-start space-x-8">
             {renderRoundColumn("West", 1, "West R1")}

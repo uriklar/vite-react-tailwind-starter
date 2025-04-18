@@ -36,11 +36,11 @@ const BracketSubmissionPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <main className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* User Information Card */}
-            <section className="bg-white rounded-xl shadow-custom p-6 border border-secondary/30">
+            <section className="bg-white rounded-xl shadow-custom p-6 border border-secondary/30 max-w-7xl mx-auto">
               <h2 className="text-xl font-semibold text-primary mb-4 font-montserrat">
                 Your Information
               </h2>
@@ -68,9 +68,13 @@ const BracketSubmissionPage: React.FC = () => {
 
             {/* Bracket Section */}
             <section className="bg-white rounded-xl shadow-custom p-6 border border-secondary/30">
-              <h2 className="text-xl font-semibold text-primary mb-4 font-montserrat">
+              <h2 className="text-xl font-semibold text-primary mb-4 font-montserrat max-w-7xl mx-auto text-center">
                 Tournament Bracket
               </h2>
+              <h3 className="text-lg font-semibold text-primary mb-4 font-montserrat max-w-7xl mx-auto text-center">
+                If you're on a mobile device, scroll horizontally to view the
+                full bracket.
+              </h3>
               <div className="overflow-x-auto">
                 <BracketDisplay
                   games={displayedGames}
@@ -83,7 +87,7 @@ const BracketSubmissionPage: React.FC = () => {
             </section>
 
             {/* Action Section */}
-            <section className="flex flex-col items-center space-y-4 pt-4">
+            <section className="flex flex-col items-center space-y-4 pt-4 max-w-7xl mx-auto">
               {(submitStatus === "idle" || submitStatus === "error") && (
                 <button
                   type="submit"
