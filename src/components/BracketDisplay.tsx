@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useMemo } from "react";
 // Import the corrected types from the central file
 import { Game, Guesses, Guess, Team } from "../types";
 
@@ -238,10 +238,6 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
   }, [baseGames, guesses]);
   // --- End Dynamic Game Processing ---
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const lastVisibleRoundRef = useRef<HTMLDivElement>(null);
-  const previousRoundsCountRef = useRef<number>(0);
-
   // Callbacks now work with Team objects, matching the state/types
   const handleWinnerChange = (game: Game, winnerTeam: Team | null) => {
     if (readOnly) return;
@@ -274,55 +270,39 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     if (round === 1) return true;
     let prerequisiteGames: Game[] = [];
 
-    if (round === 2 && conference) {
-      prerequisiteGames = baseGames.filter(
-        (g) => g.round === 1 && g.conference === conference
+    if (conference === "Finals") {
+      // Requires both conference finals to be decided
+      const eastFinal = baseGames.find(
+        (g) => g.round === 3 && g.conference === "East"
       );
-    } else if (round === 3 && conference) {
-      prerequisiteGames = baseGames.filter(
-        (g) => g.round === 2 && g.conference === conference
+      const westFinal = baseGames.find(
+        (g) => g.round === 3 && g.conference === "West"
       );
-    } else if (round === 4) {
-      prerequisiteGames = baseGames.filter((g) => g.round === 3);
+      // Ensure both finals exist and have winners before returning true
+      return !!(
+        eastFinal &&
+        guesses[eastFinal.gameId]?.winner &&
+        westFinal &&
+        guesses[westFinal.gameId]?.winner
+      );
+    } else if (conference) {
+      // Requires all games from the previous round in that conference to be decided
+      prerequisiteGames = baseGames.filter(
+        (g) => g.round === round - 1 && g.conference === conference
+      );
+    } else {
+      // Fallback for unexpected cases (shouldn't happen with specific conf/Finals checks)
+      console.warn(
+        "Checking canDisplayRound without specific conference for round > 1"
+      );
+      return false;
     }
-    if (prerequisiteGames.length === 0) return false;
+
+    if (prerequisiteGames.length === 0) return false; // Ensure prerequisite games exist
     return prerequisiteGames.every(
       (game) => guesses[game.gameId]?.winner != null
     );
   };
-
-  const getVisibleRoundsCount = (
-    mode: "horizontal" | "conferences"
-  ): number => {
-    if (mode === "horizontal") {
-      return Array.from(new Set(processedGames.map((game) => game.round)))
-        .length;
-    }
-    let count = 0;
-    ["East", "West", "Finals"].forEach((conf) => {
-      [1, 2, 3, 4].forEach((round) => {
-        if (canDisplayRound(round, conf === "Finals" ? undefined : conf)) {
-          count++;
-        }
-      });
-    });
-    return count;
-  };
-
-  useEffect(() => {
-    const currentRoundsCount = getVisibleRoundsCount(layoutMode);
-    if (
-      currentRoundsCount > previousRoundsCountRef.current &&
-      lastVisibleRoundRef.current
-    ) {
-      lastVisibleRoundRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "start",
-      });
-    }
-    previousRoundsCountRef.current = currentRoundsCount;
-  }, [processedGames, guesses, layoutMode]);
 
   // --- Rendering Logic ---
   // Use processedGames for rendering
@@ -337,16 +317,9 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     };
     return (
       <div className="container mx-auto p-4">
-        <div
-          ref={scrollContainerRef}
-          className="flex space-x-4 overflow-x-auto pb-4 scroll-smooth"
-        >
-          {rounds.map((round, index) => (
-            <div
-              key={`round-${round}`}
-              ref={index === rounds.length - 1 ? lastVisibleRoundRef : null}
-              className="flex-shrink-0 w-72"
-            >
+        <div className="flex space-x-4 overflow-x-auto pb-4 scroll-smooth">
+          {rounds.map((round) => (
+            <div key={`round-${round}`} className="flex-shrink-0 w-72">
               <h2 className="text-xl font-semibold mb-3 text-center">
                 {round === 4
                   ? "NBA Finals"
@@ -381,83 +354,67 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     );
   }
 
+  // --- Classic Horizontal Bracket Layout (Replaces old 'conferences' mode) ---
   if (layoutMode === "conferences") {
     const getGames = (conference: string, round: number): Game[] => {
       return processedGames
         .filter((g) => g.conference === conference && g.round === round)
         .sort((a, b) => a.matchup - b.matchup);
     };
-    const renderRound = (
+
+    const renderRoundColumn = (
       conference: string,
       round: number,
-      title: string,
-      isLast: boolean
-    ) => (
-      <div
-        className="flex flex-col items-center mx-2 flex-shrink-0"
-        ref={isLast ? lastVisibleRoundRef : null}
-      >
-        <h2 className="text-lg font-semibold mb-3 text-center h-10 flex items-center">
-          {title}
-        </h2>
-        {getGames(conference, round).map((game) => {
-          const guessForCard = guesses[game.gameId];
-          return (
-            <GameCard
-              key={game.gameId}
-              game={game}
-              guess={guessForCard}
-              onWinnerChange={(winner) => handleWinnerChange(game, winner)}
-              onGamesChange={(e) => handleGamesChange(game.gameId, e)}
-              readOnly={readOnly}
-              isTeamSelectable={(team) => isTeamSelectable(team)}
-            />
-          );
-        })}
-      </div>
-    );
-    const isLastVisibleRound = (conference: string, round: number): boolean => {
-      if (round === 4) return canDisplayRound(4);
-      if (round === 3) {
-        return (
-          !canDisplayRound(4) &&
-          ((conference === "West" && canDisplayRound(3, "West")) ||
-            (conference === "East" &&
-              !canDisplayRound(3, "West") &&
-              canDisplayRound(3, "East")))
-        );
+      title: string
+    ) => {
+      if (!canDisplayRound(round, conference)) {
+        return null; // Don't render the column if prerequisites aren't met
       }
-      return false;
+      return (
+        <div className="flex flex-col items-center mx-4 flex-shrink-0 w-72">
+          <h2 className="text-lg font-semibold mb-3 text-center h-10 flex items-center">
+            {title}
+          </h2>
+          <div className="space-y-4">
+            {getGames(conference, round).map((game) => {
+              const guessForCard = guesses[game.gameId];
+              return (
+                <GameCard
+                  key={game.gameId}
+                  game={game}
+                  guess={guessForCard}
+                  onWinnerChange={(winner) => handleWinnerChange(game, winner)}
+                  onGamesChange={(e) => handleGamesChange(game.gameId, e)}
+                  readOnly={readOnly}
+                  isTeamSelectable={isTeamSelectable}
+                />
+              );
+            })}
+          </div>
+        </div>
+      );
     };
+
     return (
-      <div className="container mx-auto p-4">
-        <div
-          ref={scrollContainerRef}
-          className="flex flex-nowrap justify-start space-x-4 overflow-x-auto pb-4 min-w-max scroll-smooth"
-        >
-          {canDisplayRound(1, "East") &&
-            renderRound("East", 1, "East R1", isLastVisibleRound("East", 1))}
-          {canDisplayRound(1, "West") &&
-            renderRound("West", 1, "West R1", isLastVisibleRound("West", 1))}
-          {canDisplayRound(2, "East") &&
-            renderRound("East", 2, "East R2", isLastVisibleRound("East", 2))}
-          {canDisplayRound(2, "West") &&
-            renderRound("West", 2, "West R2", isLastVisibleRound("West", 2))}
-          {canDisplayRound(3, "East") &&
-            renderRound(
-              "East",
-              3,
-              "East Finals",
-              isLastVisibleRound("East", 3)
-            )}
-          {canDisplayRound(3, "West") &&
-            renderRound(
-              "West",
-              3,
-              "West Finals",
-              isLastVisibleRound("West", 3)
-            )}
-          {canDisplayRound(4) && renderRound("Finals", 4, "NBA Finals", true)}
+      <div className="container mx-auto p-4 overflow-x-auto">
+        <div className="flex justify-center items-start min-w-max py-4">
+          <div className="flex items-start space-x-8">
+            {renderRoundColumn("West", 1, "West R1")}
+            {renderRoundColumn("West", 2, "West R2")}
+            {renderRoundColumn("West", 3, "West Finals")}
+          </div>
+
+          <div className="flex-shrink-0 w-8 md:w-16"></div>
+
+          {renderRoundColumn("Finals", 4, "NBA Finals")}
+
+          <div className="flex-shrink-0 w-8 md:w-16"></div>
+
+          <div className="flex items-start space-x-8">
+            {renderRoundColumn("East", 3, "East Finals")}
+            {renderRoundColumn("East", 2, "East R2")}
+            {renderRoundColumn("East", 1, "East R1")}
+          </div>
         </div>
       </div>
     );
