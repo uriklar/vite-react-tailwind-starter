@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import BracketSubmissionPage from "./components/BracketSubmissionPage";
 import ScoreboardPage from "./components/ScoreboardPage";
-import ViewBracketPage from "./pages/ViewBracketPage";
+//import ViewBracketPage from "./pages/ViewBracketPage";
 
 function App() {
   return (
