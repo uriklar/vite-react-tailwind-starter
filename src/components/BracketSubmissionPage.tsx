@@ -198,8 +198,8 @@ const BracketSubmissionPage: React.FC = () => {
       <footer className="mt-16 bg-white border-t border-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-primary/60 font-inter">
-            © {new Date().getFullYear()} March Madness Bracket Challenge. All
-            rights reserved.
+            © {new Date().getFullYear()} HoneyBook NBA Playoff Bracket
+            Challenge. All rights reserved.
           </p>
         </div>
       </footer>
