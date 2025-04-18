@@ -80,9 +80,9 @@
                 "logo": "https://loodibee.com/wp-content/uploads/nba-oklahoma-city-thunder-logo-300x300.png"
             },
             "team2": {
-                "name": "Sacramento Kings",
-                "seed": 7,
-                "logo": "https://i.shgcdn.com/6b8dc1e2-49ea-4f0d-83f0-ffbc849cdb9f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "name": "Los Angeles Clippers",
+                "seed": 8,
+                "logo": "https://loodibee.com/wp-content/uploads/NBA-LA-Clippers-logo-2024-300x300.png"
             }
         },
         {
@@ -97,9 +97,9 @@
                 "logo": "https://i.shgcdn.com/9c0f4588-c45c-4422-a1ef-f0abf7493026/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
-                "name": "Los Angeles Clippers",
-                "seed": 8,
-                "logo": "https://loodibee.com/wp-content/uploads/NBA-LA-Clippers-logo-2024-300x300.png"
+                "name": "Minnesota Timberwolves",
+                "seed": 5,
+                "logo": "https://i.shgcdn.com/6e6d8489-4386-4931-a3ad-0599da11c652/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
@@ -114,9 +114,9 @@
                 "logo": "https://i.shgcdn.com/0fcfdc90-889c-430a-956d-71d7e5046776/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             },
             "team2": {
-                "name": "Minnesota Timberwolves",
-                "seed": 5,
-                "logo": "https://i.shgcdn.com/6e6d8489-4386-4931-a3ad-0599da11c652/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "name": "Golden State Warriors",
+                "seed": 6,
+                "logo": "https://i.shgcdn.com/644a885d-e901-4b01-8b62-e24b4178d3b9/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
@@ -131,9 +131,9 @@
                 "logo": "https://loodibee.com/wp-content/uploads/nba-houston-rockets-logo-2020-300x300.png"
             },
             "team2": {
-                "name": "Golden State Warriors",
-                "seed": 6,
-                "logo": "https://i.shgcdn.com/644a885d-e901-4b01-8b62-e24b4178d3b9/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
+                "name": "Sacramento Kings",
+                "seed": 7,
+                "logo": "https://i.shgcdn.com/6b8dc1e2-49ea-4f0d-83f0-ffbc849cdb9f/-/format/auto/-/preview/3000x3000/-/quality/lighter/"
             }
         },
         {
