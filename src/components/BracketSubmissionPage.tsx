@@ -25,7 +25,8 @@ const BracketSubmissionPage: React.FC = () => {
       <header className="bg-white border-b border-secondary/30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-4xl md:text-5xl font-bold text-primary text-center font-montserrat">
-            March Madness <span className="text-accent">Bracket Challenge</span>
+            HoneyBook NBA Playoff{" "}
+            <span className="text-accent">Bracket Challenge</span>
           </h1>
           <p className="mt-3 text-lg text-primary/70 text-center font-inter max-w-2xl mx-auto">
             Fill out your predictions for the tournament and compete with others
