@@ -38,13 +38,13 @@ interface Guesses {
 }
 
 // Interface for user submission data fetched from individual bins
-interface UserSubmission {
-  userId: string;
-  guess: {
-    // User guesses have winner as string
-    [gameId: string]: { winner: string; inGames: number };
-  };
-}
+// interface UserSubmission {
+//   userId: string;
+//   guess: {
+//     // User guesses have winner as string
+//     [gameId: string]: { winner: string; inGames: number };
+//   };
+// }
 
 // Interface for master index entries
 interface MasterIndexEntry {
@@ -214,7 +214,7 @@ const ScoreboardPage: React.FC = () => {
       // Use Promise.allSettled to fetch all, even if some fail
       const submissionPromises = scoreboard.map(async (entry) => {
         // Ensure entry has binId - should be guaranteed by Effect 1 structure
-        const binId = (entry as any).binId;
+        const binId = entry.binId;
         if (!binId) {
           throw new Error(`Missing binId for user ${entry.userId}`);
         }
