@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import BracketDisplay from "./BracketDisplay"; // Reuse the display component
 import { getOfficialResults, getMasterIndex, getBin } from "../utils/jsonbin";
 import { calculateScore } from "../utils/scoring"; // Import scoring utility
 import bracketData from "../data/playoffBracketTemplate.json"; // For base structure
+
+// --- Configuration ---
+const ENABLE_SCORE_FETCHING = false; // Set to true to enable fetching individual scores
 
 // Interfaces (consider shared types file)
 interface Team {
@@ -47,131 +50,40 @@ interface UserSubmission {
 interface MasterIndexEntry {
   binId: string;
   userId: string;
-  name: string;
+  name: string; // Assuming name is available, adjust if needed
   timestamp: string;
 }
 
-// Interface for scoreboard data
+// Interface for scoreboard data entry with status
 interface ScoreboardEntry {
   userId: string;
-  score: number;
+  name: string;
+  score: number | null;
+  status: "loading" | "loaded" | "error" | "pending"; // Add 'pending' state
+  error?: string;
+  binId?: string; // Ensure binId is optional here if not always present initially
 }
 
 const ScoreboardPage: React.FC = () => {
   const [isLoadingResults, setIsLoadingResults] = useState<boolean>(true);
   const [errorResults, setErrorResults] = useState<string | null>(null);
-
-  // State for the bracket structure populated with results
   const [resultsGames, setResultsGames] = useState<Game[]>([]);
-  // State for the guesses derived from results for BracketDisplay
   const [resultsGuesses, setResultsGuesses] = useState<Guesses>({});
+  const [officialResults, setOfficialResults] =
+    useState<OfficialResults | null>(null);
 
-  // State for user scores
+  // State for scoreboard data
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
-  const [isLoadingScores, setIsLoadingScores] = useState<boolean>(true);
-  const [errorScores, setErrorScores] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAndScoreData = async () => {
-      setIsLoadingResults(true);
-      setIsLoadingScores(true);
-      setErrorResults(null);
-      setErrorScores(null);
-      setScoreboard([]);
-
-      try {
-        // 1. Fetch Official Results
-        const results = await getOfficialResults();
-        if (!results) {
-          throw new Error("Could not fetch official results.");
-        }
-        processResultsForDisplay(results); // Update results display
-        setIsLoadingResults(false); // Results loaded
-
-        // 2. Fetch Master Index
-        const masterIndex = await getMasterIndex();
-        if (
-          !masterIndex ||
-          !masterIndex.submissions ||
-          masterIndex.submissions.length === 0
-        ) {
-          console.log("No user submissions found in master index.");
-          setIsLoadingScores(false); // No scores to load
-          return; // Exit if no submissions
-        }
-
-        // 3. Fetch individual user guesses
-        const userSubmissionsPromises = masterIndex.submissions.map(
-          async (entry: MasterIndexEntry) => {
-            try {
-              // Fetch the specific bin, the content is wrapped in a 'record' property by jsonbin
-              const binData = await getBin(entry.binId);
-              // Ensure the fetched data has the expected structure
-              const submissionRecord = binData?.record ?? binData;
-              if (
-                submissionRecord &&
-                submissionRecord.userId &&
-                submissionRecord.guess
-              ) {
-                return submissionRecord as UserSubmission;
-              }
-              console.warn(
-                `Invalid data format in bin ${entry.binId} for user ${entry.userId}`
-              );
-              return null;
-            } catch (fetchError) {
-              console.error(
-                `Failed to fetch bin ${entry.binId} for user ${entry.userId}:`,
-                fetchError
-              );
-              return null; // Return null if a specific bin fails
-            }
-          }
-        );
-
-        const fetchedSubmissions = (
-          await Promise.all(userSubmissionsPromises)
-        ).filter((sub) => sub !== null) as UserSubmission[];
-
-        // 4. Calculate scores
-        const scores = fetchedSubmissions.map((submission) => ({
-          userId: submission.userId,
-          // Pass the .guess part and the official results
-          score: calculateScore(submission.guess, results),
-        }));
-
-        // 5. Sort scores descending
-        scores.sort((a, b) => b.score - a.score);
-
-        setScoreboard(scores);
-      } catch (err: unknown) {
-        console.error(err);
-        // Determine if error was during results or scores fetching
-        if (isLoadingResults)
-          setErrorResults(
-            (err instanceof Error ? err.message : String(err)) ||
-              "An error occurred fetching results."
-          );
-        setErrorScores(
-          (err instanceof Error ? err.message : String(err)) ||
-            "An error occurred fetching or processing user scores."
-        );
-      } finally {
-        // Ensure loading states are false if not already set
-        setIsLoadingResults(false);
-        setIsLoadingScores(false);
-      }
-    };
-
-    fetchAndScoreData();
-  }, []);
+  const [isLoadingMasterIndex, setIsLoadingMasterIndex] =
+    useState<boolean>(true);
+  const [errorMasterIndex, setErrorMasterIndex] = useState<string | null>(null);
 
   // Helper to populate the bracket structure and guesses based on official results
-  const processResultsForDisplay = (results: OfficialResults) => {
+  const processResultsForDisplay = useCallback((results: OfficialResults) => {
+    console.log({ results });
     const currentGames: Game[] = JSON.parse(JSON.stringify(bracketData.games));
     const derivedGuesses: Guesses = {};
 
-    // Use a loop that processes rounds sequentially to ensure winners propagate correctly
     const rounds = Array.from(
       new Set(currentGames.map((game) => game.round))
     ).sort((a, b) => a - b);
@@ -195,7 +107,6 @@ const ScoreboardPage: React.FC = () => {
                 inGames: result.inGames,
               };
 
-              // Propagate winner to the next round in currentGames state
               if (game.nextGameId) {
                 const nextGameIndex = currentGames.findIndex(
                   (g) => g.gameId === game.nextGameId
@@ -222,17 +133,190 @@ const ScoreboardPage: React.FC = () => {
 
     setResultsGames(currentGames);
     setResultsGuesses(derivedGuesses);
-  };
+  }, []);
+
+  // Effect 1: Fetch initial data (Results and Master Index)
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsLoadingResults(true);
+      setIsLoadingMasterIndex(true);
+      setErrorResults(null);
+      setErrorMasterIndex(null);
+      setScoreboard([]); // Clear previous scoreboard
+
+      try {
+        // Fetch results and master index concurrently
+        const [results, masterIndex] = await Promise.all([
+          getOfficialResults(),
+          getMasterIndex(),
+        ]);
+
+        // Process Results
+        if (!results) {
+          throw new Error("Could not fetch official results.");
+        }
+        setOfficialResults(results);
+        processResultsForDisplay(results);
+        setIsLoadingResults(false);
+
+        // Process Master Index
+        if (
+          !masterIndex ||
+          !masterIndex.submissions ||
+          masterIndex.submissions.length === 0
+        ) {
+          console.log("No user submissions found in master index.");
+          setErrorMasterIndex("No submissions found."); // Set an informative state
+          setIsLoadingMasterIndex(false);
+          return; // Stop if no submissions
+        }
+
+        // Initialize scoreboard with loading state
+        const initialScoreboard = masterIndex.submissions.map(
+          (entry: MasterIndexEntry): ScoreboardEntry => ({
+            userId: entry.userId,
+            // Use userId as name if name field doesn't exist, adjust as needed
+            name: entry.name || entry.userId,
+            score: null,
+            // Set initial status based on the flag, explicitly typed
+            status: ENABLE_SCORE_FETCHING ? "loading" : "pending",
+            binId: entry.binId, // Keep binId for the next step
+          })
+        );
+        setScoreboard(initialScoreboard);
+        setIsLoadingMasterIndex(false); // Master index loaded, ready for score fetching
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error("Error fetching initial data:", err);
+        if (isLoadingResults) setErrorResults(errorMessage); // Check which one was loading
+        if (isLoadingMasterIndex) setErrorMasterIndex(errorMessage);
+        setIsLoadingResults(false);
+        setIsLoadingMasterIndex(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [processResultsForDisplay]); // Add processResultsForDisplay dependency
+
+  // Effect 2: Fetch and score individual submissions when results and initial scoreboard are ready
+  useEffect(() => {
+    // Only run if score fetching is enabled AND we have results and an initial scoreboard structure
+    if (
+      !ENABLE_SCORE_FETCHING || // Check the flag first
+      !officialResults ||
+      scoreboard.length === 0 ||
+      !scoreboard.some((entry) => entry.status === "loading") // Only run if there are entries to load
+    ) {
+      return;
+    }
+
+    const fetchScoresForUsers = async () => {
+      // Use Promise.allSettled to fetch all, even if some fail
+      const submissionPromises = scoreboard.map(async (entry) => {
+        // Ensure entry has binId - should be guaranteed by Effect 1 structure
+        const binId = (entry as any).binId;
+        if (!binId) {
+          throw new Error(`Missing binId for user ${entry.userId}`);
+        }
+
+        try {
+          const binData = await getBin(binId);
+          const submissionRecord = binData?.record ?? binData;
+
+          if (
+            !submissionRecord ||
+            !submissionRecord.userId ||
+            !submissionRecord.guess
+          ) {
+            throw new Error(`Invalid data format in bin ${binId}`);
+          }
+
+          const score = calculateScore(submissionRecord.guess, officialResults);
+          return { userId: entry.userId, score };
+        } catch (fetchError) {
+          console.error(
+            `Failed to fetch/process bin ${binId} for user ${entry.userId}:`,
+            fetchError
+          );
+          // Re-throw with user context for allSettled
+          throw new Error(
+            `Failed for ${entry.name}: ${
+              fetchError instanceof Error
+                ? fetchError.message
+                : String(fetchError)
+            }`
+          );
+        }
+      });
+
+      const results = await Promise.allSettled(submissionPromises);
+
+      // Update scoreboard state based on settled promises
+      setScoreboard((prevScoreboard) => {
+        const updatedScoreboard = [...prevScoreboard]; // Create a mutable copy
+
+        results.forEach((result, index) => {
+          const targetEntryIndex = updatedScoreboard.findIndex(
+            (entry) => entry.userId === prevScoreboard[index].userId // Match using original index order
+          );
+
+          if (targetEntryIndex === -1) return; // Should not happen
+
+          if (result.status === "fulfilled") {
+            updatedScoreboard[targetEntryIndex] = {
+              ...updatedScoreboard[targetEntryIndex],
+              score: result.value.score,
+              status: "loaded",
+              error: undefined, // Clear any previous error
+            };
+          } else {
+            // status === 'rejected'
+            updatedScoreboard[targetEntryIndex] = {
+              ...updatedScoreboard[targetEntryIndex],
+              score: null,
+              status: "error",
+              error: result.reason?.message || "Failed to load score",
+            };
+          }
+        });
+
+        // Sort after all fetches are processed
+        updatedScoreboard.sort((a, b) => {
+          // Handle sorting with null scores and different statuses
+          if (a.status === "loaded" && b.status === "loaded") {
+            return (b.score ?? -Infinity) - (a.score ?? -Infinity); // Sort loaded scores descending
+          } else if (a.status === "loaded") {
+            return -1; // Keep loaded scores before others
+          } else if (b.status === "loaded") {
+            return 1; // Keep loaded scores before others
+          } else if (a.status === "loading" && b.status !== "loading") {
+            return -1; // Keep loading before error
+          } else if (b.status === "loading" && a.status !== "loading") {
+            return 1; // Keep loading before error
+          }
+          // Both are loading or both are error, maintain relative order or sort by name
+          return a.name.localeCompare(b.name);
+        });
+
+        return updatedScoreboard;
+      });
+    };
+
+    fetchScoresForUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [officialResults]); // Dependency: run when officialResults are ready
 
   return (
     <div className="space-y-8">
       {/* Scoreboard Section */}
       <section className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-[#1a1a1d] mb-4">Scoreboard</h2>
-        {isLoadingScores ? (
-          <div className="text-center py-4">Loading scores...</div>
-        ) : errorScores ? (
-          <div className="text-red-500 text-center py-4">{errorScores}</div>
+        {isLoadingMasterIndex ? (
+          <div className="text-center py-4">Loading user list...</div>
+        ) : errorMasterIndex ? (
+          <div className="text-red-500 text-center py-4">
+            {errorMasterIndex}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -248,18 +332,53 @@ const ScoreboardPage: React.FC = () => {
                   <tr
                     key={entry.userId}
                     className={
-                      index === 0 ? "bg-[#ffd866]" : "hover:bg-[#f8f5fd]"
+                      entry.status === "loaded" &&
+                      index === 0 &&
+                      (entry.score ?? -1) >= 0
+                        ? "bg-[#ffd866]"
+                        : "hover:bg-[#f8f5fd]"
                     }
                   >
-                    <td className="px-4 py-2 text-[#1a1a1d]">{index + 1}</td>
-                    <td className="px-4 py-2 text-[#1a1a1d]">{entry.userId}</td>
-                    <td className="px-4 py-2 text-right font-semibold text-[#5a2ee5]">
-                      {entry.score}
+                    <td className="px-4 py-2 text-[#1a1a1d]">
+                      {/* Show rank only if loaded, otherwise '-' */}
+                      {entry.status === "loaded" && entry.score !== null
+                        ? index + 1
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-2 text-[#1a1a1d]">{entry.name}</td>
+                    <td className="px-4 py-2 text-right font-semibold">
+                      {/* Conditional rendering based on status */}
+                      {entry.status === "pending" && (
+                        <span className="text-gray-400 text-xs">--</span>
+                      )}
+                      {entry.status === "loading" && (
+                        <span className="text-gray-500 text-xs">
+                          Loading...
+                        </span>
+                      )}
+                      {entry.status === "loaded" && (
+                        <span className="text-[#5a2ee5]">{entry.score}</span>
+                      )}
+                      {entry.status === "error" && (
+                        <span
+                          className="text-red-500 text-xs"
+                          title={entry.error}
+                        >
+                          Error
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {/* Adjust loading message visibility */}
+            {ENABLE_SCORE_FETCHING &&
+              scoreboard.some((e) => e.status === "loading") && (
+                <div className="text-center text-sm text-gray-500 pt-2">
+                  Scores are loading...
+                </div>
+              )}
           </div>
         )}
       </section>
