@@ -5,7 +5,7 @@ import { calculateScore } from "../utils/scoring"; // Import scoring utility
 import bracketData from "../data/playoffBracketTemplate.json"; // For base structure
 
 // --- Configuration ---
-const ENABLE_SCORE_FETCHING = false; // Set to true to enable fetching individual scores
+const ENABLE_SCORE_FETCHING = true; // Set to true to enable fetching individual scores
 
 // Interfaces (consider shared types file)
 interface Team {
@@ -210,101 +210,117 @@ const ScoreboardPage: React.FC = () => {
       return;
     }
 
-    const fetchScoresForUsers = async () => {
-      // Use Promise.allSettled to fetch all, even if some fail
-      const submissionPromises = scoreboard.map(async (entry) => {
-        // Ensure entry has binId - should be guaranteed by Effect 1 structure
-        const binId = entry.binId;
-        if (!binId) {
-          throw new Error(`Missing binId for user ${entry.userId}`);
+    const fetchAndProcessScore = async (entryToProcess: ScoreboardEntry) => {
+      // Ensure entry has binId
+      const binId = entryToProcess.binId;
+      if (!binId) {
+        console.error(`Missing binId for user ${entryToProcess.userId}`);
+        return {
+          // Return error structure
+          userId: entryToProcess.userId,
+          status: "error" as const, // Explicitly type status
+          error: `Missing binId for user ${entryToProcess.userId}`,
+        };
+      }
+
+      try {
+        const binData = await getBin(binId);
+        const submissionRecord = binData?.record ?? binData;
+
+        if (
+          !submissionRecord ||
+          !submissionRecord.userId ||
+          !submissionRecord.guess
+        ) {
+          throw new Error(`Invalid data format in bin ${binId}`);
         }
 
-        try {
-          const binData = await getBin(binId);
-          const submissionRecord = binData?.record ?? binData;
-
-          if (
-            !submissionRecord ||
-            !submissionRecord.userId ||
-            !submissionRecord.guess
-          ) {
-            throw new Error(`Invalid data format in bin ${binId}`);
-          }
-
-          const score = calculateScore(submissionRecord.guess, officialResults);
-          return { userId: entry.userId, score };
-        } catch (fetchError) {
-          console.error(
-            `Failed to fetch/process bin ${binId} for user ${entry.userId}:`,
-            fetchError
-          );
-          // Re-throw with user context for allSettled
-          throw new Error(
-            `Failed for ${entry.name}: ${
-              fetchError instanceof Error
-                ? fetchError.message
-                : String(fetchError)
-            }`
-          );
-        }
-      });
-
-      const results = await Promise.allSettled(submissionPromises);
-
-      // Update scoreboard state based on settled promises
-      setScoreboard((prevScoreboard) => {
-        const updatedScoreboard = [...prevScoreboard]; // Create a mutable copy
-
-        results.forEach((result, index) => {
-          const targetEntryIndex = updatedScoreboard.findIndex(
-            (entry) => entry.userId === prevScoreboard[index].userId // Match using original index order
-          );
-
-          if (targetEntryIndex === -1) return; // Should not happen
-
-          if (result.status === "fulfilled") {
-            updatedScoreboard[targetEntryIndex] = {
-              ...updatedScoreboard[targetEntryIndex],
-              score: result.value.score,
-              status: "loaded",
-              error: undefined, // Clear any previous error
-            };
-          } else {
-            // status === 'rejected'
-            updatedScoreboard[targetEntryIndex] = {
-              ...updatedScoreboard[targetEntryIndex],
-              score: null,
-              status: "error",
-              error: result.reason?.message || "Failed to load score",
-            };
-          }
-        });
-
-        // Sort after all fetches are processed
-        updatedScoreboard.sort((a, b) => {
-          // Handle sorting with null scores and different statuses
-          if (a.status === "loaded" && b.status === "loaded") {
-            return (b.score ?? -Infinity) - (a.score ?? -Infinity); // Sort loaded scores descending
-          } else if (a.status === "loaded") {
-            return -1; // Keep loaded scores before others
-          } else if (b.status === "loaded") {
-            return 1; // Keep loaded scores before others
-          } else if (a.status === "loading" && b.status !== "loading") {
-            return -1; // Keep loading before error
-          } else if (b.status === "loading" && a.status !== "loading") {
-            return 1; // Keep loading before error
-          }
-          // Both are loading or both are error, maintain relative order or sort by name
-          return a.name.localeCompare(b.name);
-        });
-
-        return updatedScoreboard;
-      });
+        const score = calculateScore(submissionRecord.guess, officialResults);
+        return {
+          // Return success structure
+          userId: entryToProcess.userId,
+          status: "loaded" as const, // Explicitly type status
+          score,
+        };
+      } catch (fetchError) {
+        const errorMessage =
+          fetchError instanceof Error ? fetchError.message : String(fetchError);
+        console.error(
+          `Failed to fetch/process bin ${binId} for user ${entryToProcess.userId}:`,
+          fetchError
+        );
+        return {
+          // Return error structure
+          userId: entryToProcess.userId,
+          status: "error" as const, // Explicitly type status
+          error: `Failed for ${entryToProcess.name}: ${errorMessage}`,
+        };
+      }
     };
 
-    fetchScoresForUsers();
+    const processScoresSequentially = async () => {
+      // Process only entries that are currently in 'loading' state
+      const entriesToLoad = scoreboard.filter(
+        (entry) => entry.status === "loading"
+      );
+
+      for (const entry of entriesToLoad) {
+        const result = await fetchAndProcessScore(entry);
+
+        setScoreboard((prevScoreboard) => {
+          const updatedScoreboard = [...prevScoreboard]; // Create a mutable copy
+          const targetEntryIndex = updatedScoreboard.findIndex(
+            (e) => e.userId === result.userId
+          );
+
+          if (targetEntryIndex !== -1) {
+            if (result.status === "loaded") {
+              updatedScoreboard[targetEntryIndex] = {
+                ...updatedScoreboard[targetEntryIndex],
+                score: result.score,
+                status: "loaded",
+                error: undefined, // Clear any previous error
+              };
+            } else {
+              // status === 'error'
+              updatedScoreboard[targetEntryIndex] = {
+                ...updatedScoreboard[targetEntryIndex],
+                score: null,
+                status: "error",
+                error: result.error || "Failed to load score",
+              };
+            }
+
+            // Sort after each update to maintain order dynamically
+            updatedScoreboard.sort((a, b) => {
+              // Handle sorting with null scores and different statuses
+              if (a.status === "loaded" && b.status === "loaded") {
+                return (b.score ?? -Infinity) - (a.score ?? -Infinity); // Sort loaded scores descending
+              } else if (a.status === "loaded") {
+                return -1; // Keep loaded scores before others
+              } else if (b.status === "loaded") {
+                return 1; // Keep loaded scores before others
+              } else if (a.status === "loading" && b.status !== "loading") {
+                return -1; // Keep loading before error/pending
+              } else if (b.status === "loading" && a.status !== "loading") {
+                return 1; // Keep loading before error/pending
+              } else if (a.status === "error" && b.status === "pending") {
+                return -1; // Keep error before pending
+              } else if (b.status === "error" && a.status === "pending") {
+                return 1; // Keep error before pending
+              }
+              // Both loading, both error, both pending, or other combinations: sort by name
+              return a.name.localeCompare(b.name);
+            });
+          }
+          return updatedScoreboard;
+        });
+      }
+    };
+
+    processScoresSequentially();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [officialResults]); // Dependency: run when officialResults are ready
+  }, [officialResults, scoreboard.length]); // Add scoreboard.length to dependencies to re-trigger if the initial list changes
 
   return (
     <div className="space-y-8">
