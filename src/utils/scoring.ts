@@ -78,18 +78,16 @@ export const calculateScore = (
   }
 
   // Log the breakdown
-  console.log("Score breakdown by round:");
-  for (const [round, scores] of Object.entries(roundScores)) {
-    console.log(`${round}:`, {
-      winners: `${scores.winners} correct (${
-        scores.winners * SCORING_CONFIG[round as PlayoffRound].basePoints
-      } pts)`,
-      series: `${scores.series} correct (${
-        scores.series * SCORING_CONFIG[round as PlayoffRound].bonusPoints
-      } pts)`,
-    });
-  }
-  console.log("Total score:", score);
+  // for (const [round, scores] of Object.entries(roundScores)) {
+  //   console.log(`${round}:`, {
+  //     winners: `${scores.winners} correct (${
+  //       scores.winners * SCORING_CONFIG[round as PlayoffRound].basePoints
+  //     } pts)`,
+  //     series: `${scores.series} correct (${
+  //       scores.series * SCORING_CONFIG[round as PlayoffRound].bonusPoints
+  //     } pts)`,
+  //   });
+  // }
 
   return score;
 };

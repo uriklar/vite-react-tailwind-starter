@@ -1,67 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
-import BracketDisplay from "./BracketDisplay"; // Reuse the display component
-import { getOfficialResults, getMasterIndex, getBin } from "../utils/jsonbin";
-import { calculateScore } from "../utils/scoring"; // Import scoring utility
-import bracketData from "../data/playoffBracketTemplate.json"; // For base structure
+import React, { useState, useEffect } from "react";
+import BracketDisplay from "./BracketDisplay";
+import { getOfficialResults } from "../utils/jsonbin";
+import bracketData from "../data/playoffBracketTemplate.json";
+import {
+  loadStaticScoreboard,
+  loadDynamicScoreboard,
+  fetchUserScore,
+  sortScoreboardEntries,
+  type ScoreboardEntry,
+  type OfficialResults,
+  type Game,
+  type Guess,
+  type Team,
+} from "../utils/scoreboardData";
 
-// --- Configuration ---
-const ENABLE_SCORE_FETCHING = true; // Set to true to enable fetching individual scores
+// Configuration
+const ENABLE_SCORE_FETCHING = false; // Set to true to enable fetching individual scores
 
-// Interfaces (consider shared types file)
-interface Team {
-  name: string;
-  seed: number | null;
-  logo: string;
-}
-interface Game {
-  gameId: string;
-  round: number;
-  conference: string;
-  matchup: number;
-  nextGameId: string | null;
-  team1: Team;
-  team2: Team;
-}
-interface ResultItem {
-  winner: string;
-  inGames: number;
-}
-interface OfficialResults {
-  [gameId: string]: ResultItem;
-}
-interface Guess {
-  winner: Team | null;
-  inGames: number | null;
-}
 interface Guesses {
   [gameId: string]: Guess;
-}
-
-// Interface for user submission data fetched from individual bins
-// interface UserSubmission {
-//   userId: string;
-//   guess: {
-//     // User guesses have winner as string
-//     [gameId: string]: { winner: string; inGames: number };
-//   };
-// }
-
-// Interface for master index entries
-interface MasterIndexEntry {
-  binId: string;
-  userId: string;
-  name: string; // Assuming name is available, adjust if needed
-  timestamp: string;
-}
-
-// Interface for scoreboard data entry with status
-interface ScoreboardEntry {
-  userId: string;
-  name: string;
-  score: number | null;
-  status: "loading" | "loaded" | "error" | "pending"; // Add 'pending' state
-  error?: string;
-  binId?: string; // Ensure binId is optional here if not always present initially
 }
 
 const ScoreboardPage: React.FC = () => {
@@ -69,18 +26,11 @@ const ScoreboardPage: React.FC = () => {
   const [errorResults, setErrorResults] = useState<string | null>(null);
   const [resultsGames, setResultsGames] = useState<Game[]>([]);
   const [resultsGuesses, setResultsGuesses] = useState<Guesses>({});
-  const [officialResults, setOfficialResults] =
-    useState<OfficialResults | null>(null);
-
-  // State for scoreboard data
+  const [, setOfficialResults] = useState<OfficialResults | null>(null);
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
-  const [isLoadingMasterIndex, setIsLoadingMasterIndex] =
-    useState<boolean>(true);
-  const [errorMasterIndex, setErrorMasterIndex] = useState<string | null>(null);
 
   // Helper to populate the bracket structure and guesses based on official results
-  const processResultsForDisplay = useCallback((results: OfficialResults) => {
-    console.log({ results });
+  const processResultsForDisplay = (results: OfficialResults) => {
     const currentGames: Game[] = JSON.parse(JSON.stringify(bracketData.games));
     const derivedGuesses: Guesses = {};
 
@@ -133,206 +83,68 @@ const ScoreboardPage: React.FC = () => {
 
     setResultsGames(currentGames);
     setResultsGuesses(derivedGuesses);
-  }, []);
+  };
 
-  // Effect 1: Fetch initial data (Results and Master Index)
+  // Effect: Load data based on mode
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const loadData = async () => {
       setIsLoadingResults(true);
-      setIsLoadingMasterIndex(true);
       setErrorResults(null);
-      setErrorMasterIndex(null);
-      setScoreboard([]); // Clear previous scoreboard
 
       try {
-        // Fetch results and master index concurrently
-        const [results, masterIndex] = await Promise.all([
-          getOfficialResults(),
-          getMasterIndex(),
-        ]);
+        if (ENABLE_SCORE_FETCHING) {
+          // Dynamic mode - fetch from JSONBin
+          const { scoreboard: initialScoreboard, results } =
+            await loadDynamicScoreboard();
+          setOfficialResults(results);
+          processResultsForDisplay(results);
+          setScoreboard(initialScoreboard);
 
-        // Process Results
-        if (!results) {
-          throw new Error("Could not fetch official results.");
-        }
-        setOfficialResults(results);
-        processResultsForDisplay(results);
-        setIsLoadingResults(false);
-
-        // Process Master Index
-        if (
-          !masterIndex ||
-          !masterIndex.submissions ||
-          masterIndex.submissions.length === 0
-        ) {
-          console.log("No user submissions found in master index.");
-          setErrorMasterIndex("No submissions found."); // Set an informative state
-          setIsLoadingMasterIndex(false);
-          return; // Stop if no submissions
-        }
-
-        // Initialize scoreboard with loading state
-        const initialScoreboard = masterIndex.submissions.map(
-          (entry: MasterIndexEntry): ScoreboardEntry => ({
-            userId: entry.userId,
-            // Use userId as name if name field doesn't exist, adjust as needed
-            name: entry.name || entry.userId,
-            score: null,
-            // Set initial status based on the flag, explicitly typed
-            status: ENABLE_SCORE_FETCHING ? "loading" : "pending",
-            binId: entry.binId, // Keep binId for the next step
-          })
-        );
-        setScoreboard(initialScoreboard);
-        setIsLoadingMasterIndex(false); // Master index loaded, ready for score fetching
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        console.error("Error fetching initial data:", err);
-        if (isLoadingResults) setErrorResults(errorMessage); // Check which one was loading
-        if (isLoadingMasterIndex) setErrorMasterIndex(errorMessage);
-        setIsLoadingResults(false);
-        setIsLoadingMasterIndex(false);
-      }
-    };
-
-    fetchInitialData();
-  }, [processResultsForDisplay]); // Add processResultsForDisplay dependency
-
-  // Effect 2: Fetch and score individual submissions when results and initial scoreboard are ready
-  useEffect(() => {
-    // Only run if score fetching is enabled AND we have results and an initial scoreboard structure
-    if (
-      !ENABLE_SCORE_FETCHING || // Check the flag first
-      !officialResults ||
-      scoreboard.length === 0 ||
-      !scoreboard.some((entry) => entry.status === "loading") // Only run if there are entries to load
-    ) {
-      return;
-    }
-
-    const fetchAndProcessScore = async (entryToProcess: ScoreboardEntry) => {
-      // Ensure entry has binId
-      const binId = entryToProcess.binId;
-      if (!binId) {
-        console.error(`Missing binId for user ${entryToProcess.userId}`);
-        return {
-          // Return error structure
-          userId: entryToProcess.userId,
-          status: "error" as const, // Explicitly type status
-          error: `Missing binId for user ${entryToProcess.userId}`,
-        };
-      }
-
-      try {
-        const binData = await getBin(binId);
-        const submissionRecord = binData?.record ?? binData;
-
-        if (
-          !submissionRecord ||
-          !submissionRecord.userId ||
-          !submissionRecord.guess
-        ) {
-          throw new Error(`Invalid data format in bin ${binId}`);
-        }
-
-        const score = calculateScore(submissionRecord.guess, officialResults);
-        return {
-          // Return success structure
-          userId: entryToProcess.userId,
-          status: "loaded" as const, // Explicitly type status
-          score,
-        };
-      } catch (fetchError) {
-        const errorMessage =
-          fetchError instanceof Error ? fetchError.message : String(fetchError);
-        console.error(
-          `Failed to fetch/process bin ${binId} for user ${entryToProcess.userId}:`,
-          fetchError
-        );
-        return {
-          // Return error structure
-          userId: entryToProcess.userId,
-          status: "error" as const, // Explicitly type status
-          error: `Failed for ${entryToProcess.name}: ${errorMessage}`,
-        };
-      }
-    };
-
-    const processScoresSequentially = async () => {
-      // Process only entries that are currently in 'loading' state
-      const entriesToLoad = scoreboard.filter(
-        (entry) => entry.status === "loading"
-      );
-
-      for (const entry of entriesToLoad) {
-        const result = await fetchAndProcessScore(entry);
-
-        setScoreboard((prevScoreboard) => {
-          const updatedScoreboard = [...prevScoreboard]; // Create a mutable copy
-          const targetEntryIndex = updatedScoreboard.findIndex(
-            (e) => e.userId === result.userId
-          );
-
-          if (targetEntryIndex !== -1) {
-            if (result.status === "loaded") {
-              updatedScoreboard[targetEntryIndex] = {
-                ...updatedScoreboard[targetEntryIndex],
-                score: result.score,
-                status: "loaded",
-                error: undefined, // Clear any previous error
-              };
-            } else {
-              // status === 'error'
-              updatedScoreboard[targetEntryIndex] = {
-                ...updatedScoreboard[targetEntryIndex],
-                score: null,
-                status: "error",
-                error: result.error || "Failed to load score",
-              };
-            }
-
-            // Sort after each update to maintain order dynamically
-            updatedScoreboard.sort((a, b) => {
-              // Handle sorting with null scores and different statuses
-              if (a.status === "loaded" && b.status === "loaded") {
-                return (b.score ?? -Infinity) - (a.score ?? -Infinity); // Sort loaded scores descending
-              } else if (a.status === "loaded") {
-                return -1; // Keep loaded scores before others
-              } else if (b.status === "loaded") {
-                return 1; // Keep loaded scores before others
-              } else if (a.status === "loading" && b.status !== "loading") {
-                return -1; // Keep loading before error/pending
-              } else if (b.status === "loading" && a.status !== "loading") {
-                return 1; // Keep loading before error/pending
-              } else if (a.status === "error" && b.status === "pending") {
-                return -1; // Keep error before pending
-              } else if (b.status === "error" && a.status === "pending") {
-                return 1; // Keep error before pending
-              }
-              // Both loading, both error, both pending, or other combinations: sort by name
-              return a.name.localeCompare(b.name);
+          // Fetch individual scores
+          for (const entry of initialScoreboard) {
+            const updatedEntry = await fetchUserScore(entry, results);
+            setScoreboard((prev) => {
+              const newScoreboard = prev.map((e) =>
+                e.userId === updatedEntry.userId ? updatedEntry : e
+              );
+              return newScoreboard.sort(sortScoreboardEntries);
             });
           }
-          return updatedScoreboard;
-        });
+        } else {
+          // Static mode - load from file
+          const results = await getOfficialResults();
+          if (!results) {
+            throw new Error("Could not fetch official results.");
+          }
+
+          setOfficialResults(results);
+          processResultsForDisplay(results);
+
+          // Load and calculate static scores
+          const staticScoreboard = await loadStaticScoreboard(results);
+          setScoreboard(staticScoreboard);
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error("Error loading data:", err);
+        setErrorResults(errorMessage);
+      } finally {
+        setIsLoadingResults(false);
       }
     };
 
-    processScoresSequentially();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [officialResults, scoreboard.length]); // Add scoreboard.length to dependencies to re-trigger if the initial list changes
+    loadData();
+  }, []);
 
   return (
     <div className="space-y-8">
       {/* Scoreboard Section */}
       <section className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-[#1a1a1d] mb-4">Scoreboard</h2>
-        {isLoadingMasterIndex ? (
-          <div className="text-center py-4">Loading user list...</div>
-        ) : errorMasterIndex ? (
-          <div className="text-red-500 text-center py-4">
-            {errorMasterIndex}
-          </div>
+        {isLoadingResults ? (
+          <div className="text-center py-4">Loading scores...</div>
+        ) : errorResults ? (
+          <div className="text-red-500 text-center py-4">{errorResults}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -356,14 +168,12 @@ const ScoreboardPage: React.FC = () => {
                     }
                   >
                     <td className="px-4 py-2 text-[#1a1a1d]">
-                      {/* Show rank only if loaded, otherwise '-' */}
                       {entry.status === "loaded" && entry.score !== null
                         ? index + 1
                         : "-"}
                     </td>
                     <td className="px-4 py-2 text-[#1a1a1d]">{entry.name}</td>
                     <td className="px-4 py-2 text-right font-semibold">
-                      {/* Conditional rendering based on status */}
                       {entry.status === "pending" && (
                         <span className="text-gray-400 text-xs">--</span>
                       )}
@@ -388,13 +198,6 @@ const ScoreboardPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            {/* Adjust loading message visibility */}
-            {ENABLE_SCORE_FETCHING &&
-              scoreboard.some((e) => e.status === "loading") && (
-                <div className="text-center text-sm text-gray-500 pt-2">
-                  Scores are loading...
-                </div>
-              )}
           </div>
         )}
       </section>

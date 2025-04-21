@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import BracketSubmissionPage from "./components/BracketSubmissionPage";
 import ScoreboardPage from "./components/ScoreboardPage";
-//import ViewBracketPage from "./pages/ViewBracketPage";
+import ViewBracketPage from "./pages/ViewBracketPage";
 
 function App() {
   return (
@@ -29,12 +29,12 @@ function App() {
               >
                 Scoreboard
               </Link>
-              {/* <Link
+              <Link
                 to="/view-bracket"
                 className="text-[#1a1a1d] hover:text-[#5a2ee5] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 View Brackets
-              </Link> */}
+              </Link>
             </div>
           </div>
         </nav>
@@ -43,7 +43,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ScoreboardPage />} />
             <Route path="/submit" element={<BracketSubmissionPage />} />
-            {/* <Route path="/view-bracket" element={<ViewBracketPage />} /> */}
+            <Route path="/view-bracket" element={<ViewBracketPage />} />
           </Routes>
         </main>
       </div>
