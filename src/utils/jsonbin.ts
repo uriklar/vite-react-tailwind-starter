@@ -20,6 +20,7 @@ const encodedApiKey = import.meta.env.VITE_JSONBIN_API_KEY;
 const API_KEY = encodedApiKey ? atob(encodedApiKey) : null; // Decode using atob()
 
 const BASE_URL = "https://api.jsonbin.io/v3";
+import officialResultsTemplate from "../data/officialResultsTemplate.json";
 
 export const createBin = async (
   data: unknown,
@@ -103,34 +104,31 @@ export const updateBin = async (
 };
 
 export const getOfficialResults = async (): Promise<any | null> => {
-  const resultsBinId = import.meta.env.VITE_JSONBIN_RESULTS_BIN_ID;
-  if (!resultsBinId) {
-    console.error(
-      "Results Bin ID not found. Make sure VITE_JSONBIN_RESULTS_BIN_ID is set in your .env file."
-    );
-    return null;
-  }
-
-  if (!API_KEY) {
-    console.error("JSONBin API key not found.");
-    return null;
-  }
-
-  const response = await fetch(`${BASE_URL}/b/${resultsBinId}/latest`, {
-    method: "GET",
-    headers: {
-      "X-Master-Key": API_KEY,
-    },
-  });
-
-  if (!response.ok) {
-    console.error("Failed to get official results:", await response.text());
-    return null;
-  }
-
-  // Expecting the bin content to be { results: { ... } }
-  const data = await response.json();
-  return data.record?.results ? data.record.results : data.results ?? null; // Handle potential wrapping in 'record' + ensure results key exists
+  return officialResultsTemplate.results;
+  // const resultsBinId = import.meta.env.VITE_JSONBIN_RESULTS_BIN_ID;
+  // if (!resultsBinId) {
+  //   console.error(
+  //     "Results Bin ID not found. Make sure VITE_JSONBIN_RESULTS_BIN_ID is set in your .env file."
+  //   );
+  //   return null;
+  // }
+  // if (!API_KEY) {
+  //   console.error("JSONBin API key not found.");
+  //   return null;
+  // }
+  // const response = await fetch(`${BASE_URL}/b/${resultsBinId}/latest`, {
+  //   method: "GET",
+  //   headers: {
+  //     "X-Master-Key": API_KEY,
+  //   },
+  // });
+  // if (!response.ok) {
+  //   console.error("Failed to get official results:", await response.text());
+  //   return null;
+  // }
+  // // Expecting the bin content to be { results: { ... } }
+  // const data = await response.json();
+  // return data.record?.results ? data.record.results : data.results ?? null; // Handle potential wrapping in 'record' + ensure results key exists
 };
 
 // ---- Master Index Functions ----
