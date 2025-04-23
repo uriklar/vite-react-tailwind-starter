@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import BracketSubmissionPage from "./components/BracketSubmissionPage";
+// import BracketSubmissionPage from "./components/BracketSubmissionPage";
 import ScoreboardPage from "./components/ScoreboardPage";
 import ViewBracketPage from "./pages/ViewBracketPage";
 
@@ -17,12 +17,12 @@ function App() {
               />
             </Link>
             <div className="space-x-4">
-              <Link
+              {/* <Link
                 to="/submit"
                 className="text-[#1a1a1d] hover:text-[#5a2ee5] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Submit Bracket
-              </Link>
+              </Link> */}
               <Link
                 to="/"
                 className="text-[#1a1a1d] hover:text-[#5a2ee5] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
@@ -42,7 +42,7 @@ function App() {
         <main className="mx-auto px-4 py-6">
           <Routes>
             <Route path="/" element={<ScoreboardPage />} />
-            <Route path="/submit" element={<BracketSubmissionPage />} />
+            {/* <Route path="/submit" element={<BracketSubmissionPage />} /> */}
             <Route path="/view-bracket" element={<ViewBracketPage />} />
           </Routes>
         </main>
