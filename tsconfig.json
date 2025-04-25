@@ -24,6 +24,7 @@
     "esModuleInterop": true
   },
   "include": ["src"],
+  "exclude": ["src/analysis/**/*"],
   "references": [
     {
       "path": "./tsconfig.node.json"
