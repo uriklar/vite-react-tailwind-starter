@@ -9,12 +9,12 @@
             "inGames": 5
         },
         "E3v6": {
-            "winner": "New York Knicks",
+            "winner": "TBD",
             "inGames": null
         },
         "E2v7": {
             "winner": "Boston Celtics",
-            "inGames": null
+            "inGames": 5
         },
         "W1v8": {
             "winner": "Oklahoma City Thunder",
@@ -25,11 +25,11 @@
             "inGames": null
         },
         "W3v6": {
-            "winner": "Minnesota Timberwolves",
+            "winner": "TBD",
             "inGames": null
         },
         "W2v7": {
-            "winner": "Golden State Warriors",
+            "winner": "TBD",
             "inGames": null
         },
         "ESF1": {
