@@ -66,28 +66,30 @@ export const calculateScore = (
     if (
       userGuess.winner?.toLowerCase() === officialResult.winner.toLowerCase()
     ) {
+      console.log(`${gameId} - ${officialResult.winner}`);
       score += basePoints;
       roundScores[round].winners++;
-    }
 
-    // Award bonus points for correct series length (independent of winner prediction)
-    if (userGuess.inGames === officialResult.inGames) {
-      score += bonusPoints;
-      roundScores[round].series++;
+      // Award bonus points for correct series length
+      if (userGuess.inGames === officialResult.inGames) {
+        console.log(`in ${userGuess.inGames}`);
+        score += bonusPoints;
+        roundScores[round].series++;
+      }
     }
   }
 
   // Log the breakdown
-  // for (const [round, scores] of Object.entries(roundScores)) {
-  //   console.log(`${round}:`, {
-  //     winners: `${scores.winners} correct (${
-  //       scores.winners * SCORING_CONFIG[round as PlayoffRound].basePoints
-  //     } pts)`,
-  //     series: `${scores.series} correct (${
-  //       scores.series * SCORING_CONFIG[round as PlayoffRound].bonusPoints
-  //     } pts)`,
-  //   });
-  // }
+  for (const [round, scores] of Object.entries(roundScores)) {
+    console.log(`${round}:`, {
+      winners: `${scores.winners} correct (${
+        scores.winners * SCORING_CONFIG[round as PlayoffRound].basePoints
+      } pts)`,
+      series: `${scores.series} correct (${
+        scores.series * SCORING_CONFIG[round as PlayoffRound].bonusPoints
+      } pts)`,
+    });
+  }
 
   return score;
 };

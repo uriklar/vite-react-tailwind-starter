@@ -75,7 +75,9 @@ export const loadStaticScoreboard = async (
   const entries = Object.entries(staticGuesses).map(
     ([name, guess]): ScoreboardEntry => {
       try {
+        console.log(`-----------------------${name}-----------------------`);
         const score = calculateScore(guess, results);
+        console.log(`-----------------------${name}-----------------------`);
         return {
           userId: name, // In static mode, name is the userId
           name,
