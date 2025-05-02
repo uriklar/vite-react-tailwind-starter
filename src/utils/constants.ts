@@ -21,8 +21,8 @@ export const SCORING_CONFIG: Record<PlayoffRound, RoundPoints> = {
 
 // Game ID patterns for each round - ordered from most specific to least specific
 export const GAME_ID_PATTERNS = {
-  [PlayoffRound.NBA_FINALS]: /^EWF$/,
-  [PlayoffRound.CONFERENCE_FINALS]: /^[EW]1v2$/,
-  [PlayoffRound.CONFERENCE_SEMIFINALS]: /^[EW][1-4]v[1-4]$/,
+  [PlayoffRound.NBA_FINALS]: /^Finals$/,
+  [PlayoffRound.CONFERENCE_FINALS]: /^[EW]CF$/,
+  [PlayoffRound.CONFERENCE_SEMIFINALS]: /^[EW](SF[12]|[1-4]v[1-4])$/,
   [PlayoffRound.FIRST_ROUND]: /^[EW][1-8]v[1-8]$/,
 };
