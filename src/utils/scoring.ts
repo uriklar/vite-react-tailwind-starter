@@ -93,3 +93,76 @@ export const calculateScore = (
 
   return score;
 };
+
+/**
+ * Calculates the maximum potential points a user can still achieve
+ * based on their guesses and current official results.
+ * 
+ * @param {PlayoffData} userGuessData - The user's guess object
+ * @param {PlayoffData} officialResultsData - The current official results
+ * @returns {number} The maximum potential points
+ */
+export const calculatePotentialPoints = (
+  userGuessData: PlayoffData,
+  officialResultsData: PlayoffData
+): number => {
+  // First, get the current score
+  const currentScore = calculateScore(userGuessData, officialResultsData);
+  
+  // Track eliminated teams to check if future predictions are possible
+  const eliminatedTeams = new Set<string>();
+  
+  // Track series that have official results
+  const decidedSeries = new Set<string>();
+  
+  // Process completed series to identify eliminated teams
+  for (const gameId in officialResultsData) {
+    const officialResult = officialResultsData[gameId];
+    if (!officialResult || officialResult.winner === "TBD") {
+      continue;
+    }
+    
+    decidedSeries.add(gameId);
+    
+    // Find the loser by checking all userGuesses for this gameId
+    // This is a simplification, we really need the bracket structure
+    const userGuess = userGuessData[gameId];
+    if (userGuess && userGuess.winner && 
+        userGuess.winner.toLowerCase() !== officialResult.winner.toLowerCase()) {
+      // User's predicted winner was eliminated
+      eliminatedTeams.add(userGuess.winner.toLowerCase());
+    }
+  }
+  
+  // Calculate potential additional points for each undecided series
+  let potentialAdditionalPoints = 0;
+  
+  // Calculate potential points that can still be earned from undecided series
+  for (const gameId in userGuessData) {
+    // Skip series that already have results
+    if (decidedSeries.has(gameId)) {
+      continue;
+    }
+    
+    const userGuess = userGuessData[gameId];
+    const round = determineRound(gameId);
+    
+    if (!round || !userGuess || !userGuess.winner) {
+      continue;
+    }
+    
+    // Check if user's predicted winner is eliminated
+    if (eliminatedTeams.has(userGuess.winner.toLowerCase())) {
+      // Can't get points for this prediction as the team is eliminated
+      continue;
+    }
+    
+    const { basePoints, bonusPoints } = SCORING_CONFIG[round];
+    
+    // Add potential points (winner + series length)
+    potentialAdditionalPoints += basePoints + bonusPoints;
+  }
+  
+  // Total potential points = current score + potential additional points
+  return currentScore + potentialAdditionalPoints;
+};

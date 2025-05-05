@@ -1,5 +1,5 @@
 import { getOfficialResults, getMasterIndex, getBin } from "./jsonbin";
-import { calculateScore } from "./scoring";
+import { calculateScore, calculatePotentialPoints } from "./scoring";
 import { guesses as staticGuesses } from "../data/guesses";
 
 // Types
@@ -48,6 +48,7 @@ export interface ScoreboardEntry {
   userId: string;
   name: string;
   score: number | null;
+  potentialPoints: number | null;
   status: "loading" | "loaded" | "error" | "pending";
   error?: string;
   binId?: string;
@@ -59,7 +60,16 @@ export const sortScoreboardEntries = (
   b: ScoreboardEntry
 ) => {
   if (a.status === "loaded" && b.status === "loaded") {
-    return (b.score ?? -Infinity) - (a.score ?? -Infinity);
+    const scoreA = a.score ?? -Infinity;
+    const scoreB = b.score ?? -Infinity;
+    
+    // First compare by score
+    if (scoreB !== scoreA) {
+      return scoreB - scoreA;
+    }
+    
+    // If scores are tied, use potential points as tiebreaker
+    return (b.potentialPoints ?? -Infinity) - (a.potentialPoints ?? -Infinity);
   } else if (a.status === "loaded") {
     return -1;
   } else if (b.status === "loaded") {
@@ -77,11 +87,13 @@ export const loadStaticScoreboard = async (
       try {
         console.log(`-----------------------${name}-----------------------`);
         const score = calculateScore(guess, results);
+        const potentialPoints = calculatePotentialPoints(guess, results);
         console.log(`-----------------------${name}-----------------------`);
         return {
           userId: name, // In static mode, name is the userId
           name,
           score,
+          potentialPoints,
           status: "loaded",
         };
       } catch (error) {
@@ -89,6 +101,7 @@ export const loadStaticScoreboard = async (
           userId: name,
           name,
           score: null,
+          potentialPoints: null,
           status: "error",
           error: error instanceof Error ? error.message : String(error),
         };
@@ -124,6 +137,7 @@ export const loadDynamicScoreboard = async (): Promise<{
       userId: entry.userId,
       name: entry.name || entry.userId,
       score: null,
+      potentialPoints: null,
       status: "loading",
       binId: entry.binId,
     })
@@ -156,9 +170,11 @@ export const fetchUserScore = async (
     }
 
     const score = calculateScore(submissionRecord.guess, results);
+    const potentialPoints = calculatePotentialPoints(submissionRecord.guess, results);
     return {
       ...entry,
       score,
+      potentialPoints,
       status: "loaded",
     };
   } catch (error) {
