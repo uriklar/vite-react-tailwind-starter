@@ -30,6 +30,19 @@ const ScoreboardPage: React.FC = () => {
   const [, setOfficialResults] = useState<OfficialResults | null>(null);
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
   const [showScoringModal, setShowScoringModal] = useState<boolean>(false);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+
+  // Extract unique team names from the bracket data for the dropdown
+  const allTeams = React.useMemo(() => {
+    const teams = new Set<string>();
+    bracketData.games
+      .filter(game => game.round === 1) // Only use first round games to get actual team names
+      .forEach(game => {
+        if (game.team1.name !== "TBD") teams.add(game.team1.name);
+        if (game.team2.name !== "TBD") teams.add(game.team2.name);
+      });
+    return Array.from(teams).sort();
+  }, []);
 
   // Helper to populate the bracket structure and guesses based on official results
   const processResultsForDisplay = (results: OfficialResults) => {
@@ -138,6 +151,75 @@ const ScoreboardPage: React.FC = () => {
     loadData();
   }, []);
 
+  // Find where a user predicted a team would exit
+  const findTeamExitPrediction = (userId: string, teamName: string): string => {
+    if (!teamName) return "No pick";
+    
+    const userGuesses = (staticGuesses as Record<string, any>)[userId];
+    if (!userGuesses) return "No pick";
+    
+    // Check if the user picked this team to win the Finals (champion)
+    const finalsGuess = userGuesses.Finals;
+    if (finalsGuess?.winner === teamName) {
+      return `Champion`;
+    }
+
+    // Map rounds to display abbreviations
+    const roundAbbr: Record<number, string> = {
+      1: "R1",
+      2: "CONF SF",
+      3: "CONF F",
+      4: "FINALS"
+    };
+
+    // Check first round games to find the team's starting point
+    const firstRoundGames = bracketData.games.filter(game => game.round === 1);
+    const startingGame = firstRoundGames.find(
+      game => game.team1.name === teamName || game.team2.name === teamName
+    );
+    
+    if (!startingGame) return "No pick"; // Team not in first round
+    
+    const startingGameId = startingGame.gameId;
+    const guessForStartingGame = userGuesses[startingGameId];
+    
+    // If team lost in first round
+    if (!guessForStartingGame || guessForStartingGame.winner !== teamName) {
+      if (!guessForStartingGame) return "No pick";
+      return `Lost in ${roundAbbr[1]}`;
+    }
+    
+    // Track team's path through bracket
+    let currentGameId = startingGameId;
+    let currentRound = 1;
+    
+    // Loop until we find where team gets eliminated
+    while (true) {
+      const currentGame = bracketData.games.find(game => game.gameId === currentGameId);
+      if (!currentGame) break;
+      
+      if (!currentGame.nextGameId) {
+        // Reached finals and already checked if they won
+        return `Lost in ${roundAbbr[4]}`;
+      }
+      
+      const nextGameId = currentGame.nextGameId;
+      const nextRound = currentRound + 1;
+      const nextGameGuess = userGuesses[nextGameId];
+      
+      // Team didn't advance to next round or no prediction made
+      if (!nextGameGuess || nextGameGuess.winner !== teamName) {
+        return `Lost in ${roundAbbr[nextRound]}`;
+      }
+      
+      // Team won this round, move to next round
+      currentGameId = nextGameId;
+      currentRound = nextRound;
+    }
+    
+    return "No pick"; // Should only reach here if data is incomplete
+  };
+
   // Scoring formula modal component
   const ScoringFormulaModal = () => {
     if (!showScoringModal) return null;
@@ -228,6 +310,25 @@ const ScoreboardPage: React.FC = () => {
       {/* Scoreboard Section */}
       <section className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-[#1a1a1d] mb-4">Scoreboard</h2>
+        
+        {/* Team Selector */}
+        <div className="mb-6">
+          <label htmlFor="team-selector" className="block text-sm font-medium text-gray-700 mb-2">
+            Select a team to see predictions:
+          </label>
+          <select
+            id="team-selector"
+            value={selectedTeam || ""}
+            onChange={(e) => setSelectedTeam(e.target.value || null)}
+            className="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#5a2ee5] focus:border-[#5a2ee5]"
+          >
+            <option value="">-- Select Team --</option>
+            {allTeams.map(team => (
+              <option key={team} value={team}>{team}</option>
+            ))}
+          </select>
+        </div>
+        
         {isLoadingResults ? (
           <div className="text-center py-4">Loading scores...</div>
         ) : errorResults ? (
@@ -258,6 +359,15 @@ const ScoreboardPage: React.FC = () => {
                       Participant's prediction for the NBA Finals
                     </div>
                   </th>
+                  {selectedTeam && (
+                    <th className="px-4 py-2 text-left text-[#1a1a1d] relative group cursor-help">
+                      Finish for {selectedTeam}
+                      <div className="absolute hidden group-hover:block bg-gray-800 text-white p-3 rounded shadow-lg w-64 text-sm z-20 left-0 top-0 transform -translate-y-full">
+                        <div className="absolute h-8 w-full bottom-0 translate-y-full opacity-0"></div>
+                        Where this participant predicted {selectedTeam} would finish in the playoffs
+                      </div>
+                    </th>
+                  )}
                   <th className="px-4 py-2 text-right text-[#1a1a1d] relative group cursor-help">
                     Potential Pts
                     <div className="absolute hidden group-hover:block bg-gray-800 text-white p-3 rounded shadow-lg w-64 text-sm z-20 right-0 top-0 transform -translate-y-full">
@@ -309,6 +419,11 @@ const ScoreboardPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-2 text-[#1a1a1d]">{entry.name}</td>
                       <td className="px-4 py-2 text-[#1a1a1d]">{finalsGuessText}</td>
+                      {selectedTeam && (
+                        <td className="px-4 py-2 text-[#1a1a1d]">
+                          {findTeamExitPrediction(entry.userId, selectedTeam)}
+                        </td>
+                      )}
                       <td className="px-4 py-2 text-right text-[#1a1a1d] font-medium">
                         {entry.status === "loaded" && entry.potentialPoints !== null 
                           ? entry.potentialPoints
