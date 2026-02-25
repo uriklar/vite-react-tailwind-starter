@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HoneyBook NBA Playoffs Pool — Bracket</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; }
+    .matchup { background: white; border-radius: 12px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); width: 180px; }
+    .team-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    .team-row.winner { background: #f0ebfd; color: #5a2ee5; font-weight: 700; }
+    .team-row.loser { color: #9ca3af; }
+    .team-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .games-badge { font-size: 10px; color: #9ca3af; text-align: center; margin-top: 4px; }
+    .round-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; text-align: center; margin-bottom: 12px; }
+    .conference-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #5a2ee5; margin-bottom: 8px; }
+    .connector { width: 20px; height: 2px; background: #e5e7eb; align-self: center; }
+    .finals-box { background: white; border-radius: 16px; padding: 16px 20px; box-shadow: 0 4px 24px rgba(90,46,229,0.12); border: 2px solid #5a2ee5; min-width: 200px; }
+    .champion-badge { background: linear-gradient(135deg, #ffd866, #f59e0b); color: #7c2d00; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 9999px; display: inline-block; }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#5a2ee5">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93 19.07 19.07"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20"/></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">NBA Playoffs Bracket</h1>
+        <p class="text-sm text-gray-500">HoneyBook · 2025 Edition — Official Results</p>
+      </div>
+    </div>
+    <nav class="flex gap-1 bg-white rounded-xl p-1 shadow-sm">
+      <button class="px-4 py-1.5 rounded-lg text-sm text-gray-500">Scoreboard</button>
+      <button class="px-4 py-1.5 rounded-lg text-sm font-semibold text-white" style="background:#5a2ee5">Bracket Results</button>
+      <button class="px-4 py-1.5 rounded-lg text-sm text-gray-500">My Bracket</button>
+    </nav>
+  </div>
+
+  <!-- Bracket -->
+  <div class="flex items-center gap-0 overflow-x-auto pb-4" style="min-width: 1100px;">
+
+    <!-- EAST — Round 1 -->
+    <div class="flex flex-col gap-4 mr-3">
+      <div class="conference-label">Eastern Conference</div>
+      <div class="round-label">First Round</div>
+
+      <div class="matchup">
+        <div class="team-row winner"><div class="team-dot" style="background:#860038"></div>Cleveland Cavaliers<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#98002e"></div>Miami Heat<span class="ml-auto text-xs">0</span></div>
+        <div class="games-badge">4 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 8px">
+        <div class="team-row winner"><div class="team-dot" style="background:#002D62"></div>Indiana Pacers<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#00471B"></div>Milwaukee Bucks<span class="ml-auto text-xs">1</span></div>
+        <div class="games-badge">5 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 8px">
+        <div class="team-row winner"><div class="team-dot" style="background:#006BB6"></div>New York Knicks<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#C8102E"></div>Detroit Pistons<span class="ml-auto text-xs">2</span></div>
+        <div class="games-badge">6 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 8px">
+        <div class="team-row winner"><div class="team-dot" style="background:#007A33"></div>Boston Celtics<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#0077C0"></div>Orlando Magic<span class="ml-auto text-xs">1</span></div>
+        <div class="games-badge">5 games</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- EAST — Semis -->
+    <div class="flex flex-col gap-8 mx-3" style="margin-top: 48px">
+      <div class="round-label">Conf. Semifinals</div>
+
+      <div class="matchup">
+        <div class="team-row winner"><div class="team-dot" style="background:#002D62"></div>Indiana Pacers<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#860038"></div>Cleveland Cavaliers<span class="ml-auto text-xs">1</span></div>
+        <div class="games-badge">5 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 32px">
+        <div class="team-row winner"><div class="team-dot" style="background:#006BB6"></div>New York Knicks<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#007A33"></div>Boston Celtics<span class="ml-auto text-xs">2</span></div>
+        <div class="games-badge">6 games</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- EAST — Conf Finals -->
+    <div class="flex flex-col mx-3" style="margin-top: 120px">
+      <div class="round-label">Conf. Finals</div>
+      <div class="matchup">
+        <div class="team-row winner"><div class="team-dot" style="background:#002D62"></div>Indiana Pacers<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#006BB6"></div>New York Knicks<span class="ml-auto text-xs">2</span></div>
+        <div class="games-badge">6 games</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- NBA FINALS (center) -->
+    <div class="flex flex-col items-center mx-4" style="margin-top: 220px">
+      <div class="round-label mb-4" style="color:#5a2ee5; font-size:13px">🏆 NBA Finals</div>
+      <div class="finals-box">
+        <div class="team-row winner mb-1" style="background:#f0ebfd; padding: 10px 12px;">
+          <div class="team-dot" style="background:#007AC1"></div>
+          <span>Oklahoma City Thunder</span>
+          <span class="ml-auto font-bold">4</span>
+        </div>
+        <div class="team-row loser" style="padding: 10px 12px;">
+          <div class="team-dot" style="background:#002D62"></div>
+          <span>Indiana Pacers</span>
+          <span class="ml-auto">3</span>
+        </div>
+        <div class="text-center mt-3">
+          <span class="champion-badge">🏆 2025 Champions</span>
+        </div>
+        <div class="games-badge mt-1">7 games</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- WEST — Conf Finals -->
+    <div class="flex flex-col mx-3" style="margin-top: 120px">
+      <div class="round-label">Conf. Finals</div>
+      <div class="matchup">
+        <div class="team-row winner"><div class="team-dot" style="background:#007AC1"></div>OKC Thunder<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#0C2340"></div>Minnesota T'Wolves<span class="ml-auto text-xs">1</span></div>
+        <div class="games-badge">5 games</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- WEST — Semis -->
+    <div class="flex flex-col gap-8 mx-3" style="margin-top: 48px">
+      <div class="round-label">Conf. Semifinals</div>
+
+      <div class="matchup">
+        <div class="team-row winner"><div class="team-dot" style="background:#007AC1"></div>OKC Thunder<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#0E2240"></div>Denver Nuggets<span class="ml-auto text-xs">3</span></div>
+        <div class="games-badge">7 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 32px">
+        <div class="team-row winner"><div class="team-dot" style="background:#0C2340"></div>Minnesota T'Wolves<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#1D428A"></div>Golden State Warriors<span class="ml-auto text-xs">1</span></div>
+        <div class="games-badge">5 games</div>
+      </div>
+    </div>
+
+    <div class="connector"></div>
+
+    <!-- WEST — Round 1 -->
+    <div class="flex flex-col gap-4 ml-3">
+      <div class="conference-label text-right" style="color:#007AC1">Western Conference</div>
+      <div class="round-label">First Round</div>
+
+      <div class="matchup">
+        <div class="team-row winner"><div class="team-dot" style="background:#007AC1"></div>OKC Thunder<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#5D76A9"></div>Memphis Grizzlies<span class="ml-auto text-xs">0</span></div>
+        <div class="games-badge">4 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 8px">
+        <div class="team-row winner"><div class="team-dot" style="background:#0E2240"></div>Denver Nuggets<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#C8102E"></div>LA Clippers<span class="ml-auto text-xs">3</span></div>
+        <div class="games-badge">7 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 8px">
+        <div class="team-row winner"><div class="team-dot" style="background:#0C2340"></div>Minnesota T'Wolves<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#552583"></div>LA Lakers<span class="ml-auto text-xs">1</span></div>
+        <div class="games-badge">5 games</div>
+      </div>
+
+      <div class="matchup" style="margin-top: 8px">
+        <div class="team-row winner"><div class="team-dot" style="background:#1D428A"></div>Golden State Warriors<span class="ml-auto text-xs">4</span></div>
+        <div class="team-row loser"><div class="team-dot" style="background:#CE1141"></div>Houston Rockets<span class="ml-auto text-xs">3</span></div>
+        <div class="games-badge">7 games</div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
