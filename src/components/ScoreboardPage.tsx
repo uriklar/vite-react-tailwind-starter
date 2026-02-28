@@ -5,8 +5,6 @@ import bracketData from "../data/playoffBracketTemplate.json";
 import {
   loadStaticScoreboard,
   loadDynamicScoreboard,
-  fetchUserScore,
-  sortScoreboardEntries,
   type ScoreboardEntry,
   type OfficialResults,
   type Game,
@@ -109,22 +107,10 @@ const ScoreboardPage: React.FC = () => {
       try {
         if (ENABLE_SCORE_FETCHING) {
           // Dynamic mode - fetch from JSONBin
-          const { scoreboard: initialScoreboard, results } =
-            await loadDynamicScoreboard();
+          const { scoreboard, results } = await loadDynamicScoreboard();
           setOfficialResults(results);
           processResultsForDisplay(results);
-          setScoreboard(initialScoreboard);
-
-          // Fetch individual scores
-          for (const entry of initialScoreboard) {
-            const updatedEntry = await fetchUserScore(entry, results);
-            setScoreboard((prev) => {
-              const newScoreboard = prev.map((e) =>
-                e.userId === updatedEntry.userId ? updatedEntry : e
-              );
-              return newScoreboard.sort(sortScoreboardEntries);
-            });
-          }
+          setScoreboard(scoreboard);
         } else {
           // Static mode - load from file
           const results = await getOfficialResults();

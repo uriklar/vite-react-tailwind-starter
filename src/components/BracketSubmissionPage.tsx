@@ -13,7 +13,6 @@ const BracketSubmissionPage: React.FC = () => {
     guesses,
     isSubmitting,
     submitStatus,
-    binId,
     handleNameChange,
     handleGuessChange,
     handleSubmit,
@@ -157,9 +156,7 @@ const BracketSubmissionPage: React.FC = () => {
                         Your predictions have been recorded. Good luck in the
                         tournament!
                       </p>
-                      <p className="mt-4 text-sm text-primary/60 font-mono bg-white/50 p-2 rounded">
-                        Submission ID: {binId}
-                      </p>
+
                     </div>
                   </div>
                 </div>
