@@ -1,3 +1,5 @@
+// @deprecated — use src/utils/db.ts instead
+
 interface BinResponse {
   metadata: {
     id: string;

@@ -7,8 +7,8 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-[#f8f5fd]">
-        <nav className="bg-[#ffd866] shadow-md">
-          <div className="container mx-auto flex justify-between items-center py-3 px-4">
+        <nav className="bg-[#ffd866] shadow-lg">
+          <div className="container mx-auto flex justify-between items-center py-4 px-4">
             <Link to="/" className="flex items-center">
               <img
                 src="/hb-ball.png"
