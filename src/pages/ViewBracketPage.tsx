@@ -1,38 +1,12 @@
 import React, { useState, useEffect } from "react";
 import BracketDisplay from "../components/BracketDisplay";
 import { Game, Guesses, Team } from "../types";
-// Import JSONBin utility functions
-import { getMasterIndex, getBin } from "../utils/jsonbin";
-// Import base game data
+import { getSubmissions, Submission } from "../utils/db";
 import baseGameData from "../data/playoffBracketTemplate.json";
 
-// Player type based on Master Index structure
 interface Player {
-  id: string; // Corresponds to binId
+  id: string;
   name: string;
-}
-
-// Interface for the raw data fetched from the player bin
-interface PlayerBinRawData {
-  userId?: string; // Optional userId if stored
-  guess: {
-    // Expects 'guess' key
-    [gameId: string]: {
-      winner: string | null; // Winner is a string name
-      inGames: number | null;
-    };
-  };
-}
-
-// Type guard for the raw fetched data
-function isValidRawData(data: unknown): data is PlayerBinRawData {
-  // Check if data is a non-null object and has a non-null 'guess' property which is also an object
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    typeof (data as PlayerBinRawData).guess === "object" &&
-    (data as PlayerBinRawData).guess !== null
-  );
 }
 
 // Function to find a Team object by name from the base games
@@ -46,38 +20,30 @@ const findTeamByName = (
     if (game.team2.name === name) return game.team2;
   }
   console.warn(`Team object not found in baseGames for name: ${name}`);
-  return null; // Return null if not found
+  return null;
 };
 
 const ViewBracketPage: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [baseGames] = useState<Game[]>(baseGameData.games || []);
   const [playerGuesses, setPlayerGuesses] = useState<Guesses | null>(null);
   const [isLoadingPlayers, setIsLoadingPlayers] = useState<boolean>(true);
-  const [isLoadingBracket, setIsLoadingBracket] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch Players (Submissions) from Master Index on Mount
+  // Fetch all submissions on mount
   useEffect(() => {
     setIsLoadingPlayers(true);
     setError(null);
 
-    getMasterIndex()
-      .then((masterIndex) => {
-        if (masterIndex && Array.isArray(masterIndex.submissions)) {
-          const fetchedPlayers = masterIndex.submissions.map((sub) => ({
-            id: sub.binId,
-            name: sub.name,
-          }));
-          setPlayers(fetchedPlayers);
-        } else {
-          console.error("Invalid master index data received:", masterIndex);
-          throw new Error("Failed to load player list or invalid format.");
-        }
+    getSubmissions()
+      .then((subs) => {
+        setSubmissions(subs);
+        setPlayers(subs.map((s) => ({ id: s.id, name: s.name })));
       })
       .catch((err) => {
-        console.error("Error fetching master index:", err);
+        console.error("Error fetching submissions:", err);
         setError(err.message || "Failed to load player list.");
         setPlayers([]);
       })
@@ -86,77 +52,55 @@ const ViewBracketPage: React.FC = () => {
       });
   }, []);
 
-  // Fetch Player Guesses and *convert* them
+  // When player is selected, convert their bracket to Guesses
   useEffect(() => {
     if (!selectedPlayerId || baseGames.length === 0) {
-      // Ensure baseGames are loaded
       setPlayerGuesses(null);
       return;
     }
 
-    setIsLoadingBracket(true);
     setError(null);
-    setPlayerGuesses(null);
 
-    getBin(selectedPlayerId)
-      .then((binResponse) => {
-        const rawData = binResponse?.record ?? binResponse;
-        console.log("Fetched raw bin data:", rawData);
+    const submission = submissions.find((s) => s.id === selectedPlayerId);
+    if (!submission) {
+      setError("Player not found.");
+      setPlayerGuesses(null);
+      return;
+    }
 
-        if (isValidRawData(rawData)) {
-          const convertedGuesses: Guesses = {};
-          // Iterate through the raw guesses (winner as string)
-          for (const gameId in rawData.guess) {
-            if (Object.prototype.hasOwnProperty.call(rawData.guess, gameId)) {
-              const rawGuess = rawData.guess[gameId];
-              // Find the full Team object using the winner name string
-              const winnerTeam = findTeamByName(rawGuess.winner, baseGames);
+    const rawBracket = submission.bracket as {
+      [gameId: string]: { winner: string | null; inGames: number | null };
+    };
 
-              // Store the converted guess (winner as Team object)
-              convertedGuesses[gameId] = {
-                winner: winnerTeam, // Store the found Team object or null
-                inGames: rawGuess.inGames,
-              };
-            }
-          }
-          console.log("Converted guesses state:", convertedGuesses);
-          setPlayerGuesses(convertedGuesses); // Set state with converted data
-        } else {
-          console.error(
-            "Invalid or missing 'guess' data structure in raw bin data:",
-            selectedPlayerId,
-            rawData
-          );
-          throw new Error(
-            "Bracket data not found or is in an invalid format for this player."
-          );
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching or processing player bracket bin:", err);
-        const errorMsg = err.message || "Failed to load bracket.";
-        // Simplified error handling for now
-        setError(errorMsg);
-        setPlayerGuesses(null);
-      })
-      .finally(() => {
-        setIsLoadingBracket(false);
-      });
-  }, [selectedPlayerId, baseGames]); // Add baseGames dependency
+    if (!rawBracket || typeof rawBracket !== "object") {
+      setError("Bracket data not found or is in an invalid format for this player.");
+      setPlayerGuesses(null);
+      return;
+    }
+
+    const convertedGuesses: Guesses = {};
+    for (const gameId in rawBracket) {
+      if (Object.prototype.hasOwnProperty.call(rawBracket, gameId)) {
+        const rawGuess = rawBracket[gameId];
+        const winnerTeam = findTeamByName(rawGuess.winner, baseGames);
+        convertedGuesses[gameId] = {
+          winner: winnerTeam,
+          inGames: rawGuess.inGames,
+        };
+      }
+    }
+
+    setPlayerGuesses(convertedGuesses);
+  }, [selectedPlayerId, submissions, baseGames]);
 
   const handlePlayerChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedPlayerId(event.target.value);
   };
 
-  // Dummy function for read-only display
-  const handleGuessChange = () =>
-    // gameId: string, winner: Team | null, inGames: number | null // Original params
-    {
-      // Do nothing in read-only mode
-      // console.log(`Attempted change (ignored): ${gameId}, ${winner?.name}, ${inGames}`);
-    };
+  const handleGuessChange = () => {
+    // Do nothing in read-only mode
+  };
 
-  // Simple check if base games loaded correctly
   if (baseGames.length === 0) {
     return (
       <div className="container mx-auto p-4">
@@ -165,12 +109,6 @@ const ViewBracketPage: React.FC = () => {
       </div>
     );
   }
-
-  // Log the state right before rendering
-  console.log(
-    "Rendering ViewBracketPage - playerGuesses state (should have Team objects):",
-    playerGuesses
-  );
 
   return (
     <div className="container mx-auto p-4">
@@ -193,19 +131,17 @@ const ViewBracketPage: React.FC = () => {
           <option value="" disabled>
             {isLoadingPlayers ? "Loading players..." : "-- Select a Player --"}
           </option>
-          {
-            !isLoadingPlayers && players.length > 0 ? (
-              players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.name}
-                </option>
-              ))
-            ) : !isLoadingPlayers ? (
-              <option value="" disabled>
-                No players found
+          {!isLoadingPlayers && players.length > 0 ? (
+            players.map((player) => (
+              <option key={player.id} value={player.id}>
+                {player.name}
               </option>
-            ) : null // While loading, the first option covers it
-          }
+            ))
+          ) : !isLoadingPlayers ? (
+            <option value="" disabled>
+              No players found
+            </option>
+          ) : null}
         </select>
       </div>
 
@@ -215,35 +151,24 @@ const ViewBracketPage: React.FC = () => {
         </div>
       )}
 
-      {selectedPlayerId && isLoadingBracket && (
-        <div className="my-4 text-center">
-          <p>Loading bracket...</p>
-          {/* Consider adding a spinner component here */}
+      {selectedPlayerId && playerGuesses && baseGames.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-3">
+            Bracket for{" "}
+            {players.find((p) => p.id === selectedPlayerId)?.name ||
+              "Selected Player"}
+          </h2>
+          <BracketDisplay
+            games={baseGames}
+            guesses={playerGuesses}
+            onGuessChange={handleGuessChange}
+            readOnly={true}
+            layoutMode="conferences"
+          />
         </div>
       )}
 
-      {selectedPlayerId &&
-        !isLoadingBracket &&
-        playerGuesses &&
-        baseGames.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-3">
-              Bracket for{" "}
-              {players.find((p) => p.id === selectedPlayerId)?.name ||
-                "Selected Player"}
-            </h2>
-            <BracketDisplay
-              games={baseGames}
-              guesses={playerGuesses}
-              onGuessChange={handleGuessChange}
-              readOnly={true} // Set to read-only
-              layoutMode="conferences" // Or "horizontal", adjust as needed
-            />
-          </div>
-        )}
-
-      {/* Condition to show 'no bracket found' only when not loading, a player is selected, but guesses are null AND there's no general fetch error */}
-      {selectedPlayerId && !isLoadingBracket && !playerGuesses && !error && (
+      {selectedPlayerId && !playerGuesses && !error && (
         <div className="my-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
           <p>No bracket data found or loaded for this player.</p>
         </div>

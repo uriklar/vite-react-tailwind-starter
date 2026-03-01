@@ -1,6 +1,6 @@
 import { useState } from "react";
 import bracketData from "../data/playoffBracketTemplate.json";
-import { createBin, getMasterIndex, updateMasterIndex } from "../utils/jsonbin";
+import { upsertSubmission } from "../utils/db";
 
 // Types
 export interface Team {
@@ -44,7 +44,6 @@ export interface UseBracketSubmissionReturn {
   guesses: Guesses;
   isSubmitting: boolean;
   submitStatus: "idle" | "success" | "error" | "error-index";
-  binId: string | null;
   handleNameChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleGuessChange: (
     gameId: string,
@@ -64,7 +63,6 @@ export const useBracketSubmission = (): UseBracketSubmissionReturn => {
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "success" | "error" | "error-index"
   >("idle");
-  const [binId, setBinId] = useState<string | null>(null);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserName(event.target.value);
@@ -147,7 +145,6 @@ export const useBracketSubmission = (): UseBracketSubmissionReturn => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitStatus("idle");
-    setBinId(null);
 
     if (!userName.trim()) {
       alert("Please enter your name.");
@@ -180,59 +177,17 @@ export const useBracketSubmission = (): UseBracketSubmissionReturn => {
     }
 
     setIsSubmitting(true);
-    let createdBinId: string | null = null;
 
     try {
-      const result = await createBin(
-        submissionPayload,
-        `bracket_${userName.trim()}`
+      const result = await upsertSubmission(
+        userName.trim(),
+        userName.trim(),
+        submissionPayload.guess
       );
-      if (result && result.metadata && result.metadata.id) {
-        createdBinId = result.metadata.id;
-        setBinId(createdBinId);
-        console.log(
-          "User guess bin created successfully! Bin ID:",
-          createdBinId
-        );
-
-        try {
-          const masterIndex = await getMasterIndex();
-          if (masterIndex) {
-            masterIndex.submissions.push({
-              userId: userName.trim(),
-              binId: createdBinId,
-              name: userName.trim(),
-              timestamp: new Date().toISOString(),
-            });
-            const indexUpdateResult = await updateMasterIndex(masterIndex);
-            if (indexUpdateResult) {
-              console.log("Master index updated successfully.");
-              setSubmitStatus("success");
-            } else {
-              console.error("Failed to update master index.");
-              setSubmitStatus("success");
-              alert(
-                "Submission saved, but failed to update master index. Please contact admin."
-              );
-            }
-          } else {
-            console.error("Could not retrieve master index to update.");
-            setSubmitStatus("success");
-            alert(
-              "Submission saved, but failed to update master index. Please contact admin."
-            );
-          }
-        } catch (indexError) {
-          console.error("Error updating master index:", indexError);
-          setSubmitStatus("success");
-          alert(
-            "Submission saved, but failed to update master index. Please contact admin."
-          );
-        }
+      if (result !== null) {
+        setSubmitStatus("success");
       } else {
-        throw new Error(
-          "Failed to create user guess bin or received invalid response."
-        );
+        setSubmitStatus("error");
       }
     } catch (error) {
       console.error("Submission failed:", error);
@@ -248,7 +203,6 @@ export const useBracketSubmission = (): UseBracketSubmissionReturn => {
     guesses,
     isSubmitting,
     submitStatus,
-    binId,
     handleNameChange,
     handleGuessChange,
     handleSubmit,

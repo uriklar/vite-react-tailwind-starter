@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import BracketDisplay from "./BracketDisplay";
-import { getOfficialResults } from "../utils/jsonbin";
+import { getOfficialResults } from "../utils/db";
 import bracketData from "../data/playoffBracketTemplate.json";
 import {
   loadStaticScoreboard,
   loadDynamicScoreboard,
-  fetchUserScore,
-  sortScoreboardEntries,
   type ScoreboardEntry,
   type OfficialResults,
   type Game,
@@ -109,22 +107,10 @@ const ScoreboardPage: React.FC = () => {
       try {
         if (ENABLE_SCORE_FETCHING) {
           // Dynamic mode - fetch from JSONBin
-          const { scoreboard: initialScoreboard, results } =
-            await loadDynamicScoreboard();
+          const { scoreboard, results } = await loadDynamicScoreboard();
           setOfficialResults(results);
           processResultsForDisplay(results);
-          setScoreboard(initialScoreboard);
-
-          // Fetch individual scores
-          for (const entry of initialScoreboard) {
-            const updatedEntry = await fetchUserScore(entry, results);
-            setScoreboard((prev) => {
-              const newScoreboard = prev.map((e) =>
-                e.userId === updatedEntry.userId ? updatedEntry : e
-              );
-              return newScoreboard.sort(sortScoreboardEntries);
-            });
-          }
+          setScoreboard(scoreboard);
         } else {
           // Static mode - load from file
           const results = await getOfficialResults();
@@ -404,20 +390,20 @@ const ScoreboardPage: React.FC = () => {
                   return (
                     <tr
                       key={entry.userId}
-                      className={
+                      className={`border-l-4 border-[#5a2ee5] ${
                         entry.status === "loaded" &&
                         index === 0 &&
                         (entry.score ?? -1) >= 0
                           ? "bg-[#ffd866]"
                           : "hover:bg-[#f8f5fd]"
-                      }
+                      }`}
                     >
                       <td className="px-4 py-2 text-[#1a1a1d]">
                         {entry.status === "loaded" && entry.score !== null
-                          ? index + 1
+                          ? index === 0 ? "🥇 1" : index === 1 ? "🥈 2" : index === 2 ? "🥉 3" : index + 1
                           : "-"}
                       </td>
-                      <td className="px-4 py-2 text-[#1a1a1d]">{entry.name}</td>
+                      <td className="px-4 py-2 text-[#1a1a1d] text-base font-bold">{entry.name}</td>
                       <td className="px-4 py-2 text-[#1a1a1d]">{finalsGuessText}</td>
                       {selectedTeam && (
                         <td className="px-4 py-2 text-[#1a1a1d]">
@@ -443,7 +429,7 @@ const ScoreboardPage: React.FC = () => {
                           </span>
                         )}
                         {entry.status === "loaded" && (
-                          <span className="text-[#5a2ee5]">{entry.score}</span>
+                          <span className="text-[#5a2ee5] text-lg font-bold">{entry.score}</span>
                         )}
                         {entry.status === "error" && (
                           <span
